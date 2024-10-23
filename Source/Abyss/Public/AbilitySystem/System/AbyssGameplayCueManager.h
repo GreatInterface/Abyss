@@ -1,0 +1,37 @@
+﻿// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameplayCueManager.h"
+#include "AbyssGameplayCueManager.generated.h"
+
+
+/**
+ * 默认情况下 GameplayCueManager 会扫描我们指定的文件夹寻找 GameplayCueNotifies
+ * 并在**开始游戏**时将这些 Notifies 加载到内存中，但这样会导致
+ * Notifies以及所引用的包括但不限于声音、粒子都会在游戏开始时被加载到内存，无论是否会使用
+ *
+ * 所以我们自定义GameplayCueManager子类并重写ShouldAsyncLoadRuntimeObjectLibraries()
+ */
+UCLASS()
+class ABYSS_API UAbyssGameplayCueManager : public UGameplayCueManager
+{
+	GENERATED_BODY()
+
+public:
+
+	UAbyssGameplayCueManager(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	static UAbyssGameplayCueManager* Get();
+
+	//~UGameplayCueManager
+	virtual void OnCreated() override;
+	virtual bool ShouldAsyncLoadRuntimeObjectLibraries() const override;
+	virtual bool ShouldSyncLoadMissingGameplayCues() const override;
+	virtual bool ShouldAsyncLoadMissingGameplayCues() const override;
+	//~End of UGameplayCueManager
+
+	
+
+};
