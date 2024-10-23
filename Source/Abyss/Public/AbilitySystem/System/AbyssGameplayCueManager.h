@@ -33,5 +33,12 @@ public:
 	//~End of UGameplayCueManager
 
 	
+	/** 显示所有通过AbyssGameplayCueManager注册并且当前正在被加载到内存的资产 */
+	static void DumpGameplayCues(const TArray<FString>& Args);
+
+private:
+	/** @see OnCreated() */
+	void UpdateDelayLoadDelegateListeners();
+	
 
 };
