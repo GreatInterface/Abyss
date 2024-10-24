@@ -90,17 +90,32 @@ void UAbyssGameplayCueManager::OnCreated()
 
 bool UAbyssGameplayCueManager::ShouldAsyncLoadRuntimeObjectLibraries() const
 {
-	return Super::ShouldAsyncLoadRuntimeObjectLibraries();
+	switch (AbyssGameplayCueManagerCvars::LoadMode) {
+	case EAbyssEditorLoadMode::LoadUpfront:
+		return true;
+	case EAbyssEditorLoadMode::PreloadAsCuesAreReferenced_GameOnly:
+#if WITH_EDITOR
+		if (GIsEditor)
+		{
+			return false;
+		}
+#endif
+		break;
+	case EAbyssEditorLoadMode::PreloadAsCuesAreReferenced:
+		break;
+	}
+	
+	return !ShouldDelayLoadGameplayCues();
 }
 
 bool UAbyssGameplayCueManager::ShouldSyncLoadMissingGameplayCues() const
 {
-	return Super::ShouldSyncLoadMissingGameplayCues();
+	return false;
 }
 
 bool UAbyssGameplayCueManager::ShouldAsyncLoadMissingGameplayCues() const
 {
-	return Super::ShouldAsyncLoadMissingGameplayCues();
+	return true;
 }
 
 void UAbyssGameplayCueManager::DumpGameplayCues(const TArray<FString>& Args)
@@ -292,6 +307,12 @@ void UAbyssGameplayCueManager::RegisterPreloadedCue(UClass* LoadedGameplayCueCla
 		TSet<FObjectKey>& ReferencerSet = PreloadedCueReferencerSet.FindOrAdd(LoadedGameplayCueClass);
 		ReferencerSet.Add(OwningObject);
 	}
+}
+
+bool UAbyssGameplayCueManager::ShouldDelayLoadGameplayCues() const
+{
+	const bool bClientDelayLoadGameplayCues = true;
+	return !IsRunningDedicatedServer() && bClientDelayLoadGameplayCues;
 }
 
 void UAbyssGameplayCueManager::HandlePostGarbageCollect()

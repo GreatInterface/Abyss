@@ -51,6 +51,8 @@ private:
 	void OnPreloadCueComplete(FSoftObjectPath Path, TWeakObjectPtr<UObject> OwningObject, bool bAlwaysLoadedCue);
 	void RegisterPreloadedCue(UClass* LoadedGameplayCueClass, UObject* OwningObject);
 
+	bool ShouldDelayLoadGameplayCues() const;
+
 private:
 	struct FLoadedGameplayTagToProcessData
 	{
