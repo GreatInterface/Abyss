@@ -40,6 +40,17 @@ private:
 	/** @see OnCreated() */
 	void UpdateDelayLoadDelegateListeners();
 
+	//~ @see UpdateDelayLoadDelegateListeners()
+	void OnGameplayLoaded(const FGameplayTag& GameplayTag);
+	void HandlePostGarbageCollect();
+	void HandlePostLoadMap(UWorld* World);
+	//~End of UpdateDelayLoadDelegateListeners()
+
+	void ProcessLoadedTags();
+	void ProcessTagToPreLoad(FGameplayTag Tag, UObject* OwningObject);
+	void OnPreloadCueComplete(FSoftObjectPath Path, TWeakObjectPtr<UObject> OwningObject, bool bAlwaysLoadedCue);
+	void RegisterPreloadedCue(UClass* LoadedGameplayCueClass, UObject* OwningObject);
+
 private:
 	struct FLoadedGameplayTagToProcessData
 	{

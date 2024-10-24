@@ -24,8 +24,50 @@ namespace AbyssGameplayCueManagerCvars
 		TEXT("Shows all assets that were loaded via LyraGameplayCueManager and are currently in memory."),
 		FConsoleCommandWithArgsDelegate::CreateStatic(UAbyssGameplayCueManager::DumpGameplayCues));
 
-	static EAbyssEditorLoadMode LoadMode = EAbyssEditorLoadMode::LoadUpfront;	
+	static EAbyssEditorLoadMode LoadMode = EAbyssEditorLoadMode::LoadUpfront;
+
+	bool GetEditorLoadModePolicy(const EAbyssEditorLoadMode& InMode)
+	{
+		switch (InMode)
+		{
+		case EAbyssEditorLoadMode::LoadUpfront:
+			return false;
+		case EAbyssEditorLoadMode::PreloadAsCuesAreReferenced_GameOnly:
+#if WITH_EDITOR
+			if (GIsEditor)
+			{
+				return false;
+			}
+#endif
+			return true;
+		case EAbyssEditorLoadMode::PreloadAsCuesAreReferenced:
+			return true;
+
+			default: return false;
+		}
+	}
 }
+
+////////////////////////////////////////////////////////////////////////////////////////////
+
+struct FGameplayCueTagThreadSynchronizeGraphTask : public FAsyncGraphTaskBase
+{
+	FGameplayCueTagThreadSynchronizeGraphTask(TFunction<void()>&& Task)
+		: TheTask(MoveTemp(Task))
+	{}
+
+	void InvokeTask(ENamedThreads::Type CurrentThread, const FGraphEventRef& GraphEvent)
+	{
+		TheTask();
+	}
+
+	ENamedThreads::Type GetDesiredThread() const
+	{
+		return ENamedThreads::GameThread;
+	}
+
+	TFunction<void()> TheTask;
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -42,6 +84,8 @@ UAbyssGameplayCueManager* UAbyssGameplayCueManager::Get()
 void UAbyssGameplayCueManager::OnCreated()
 {
 	Super::OnCreated();
+
+	UpdateDelayLoadDelegateListeners();
 }
 
 bool UAbyssGameplayCueManager::ShouldAsyncLoadRuntimeObjectLibraries() const
@@ -120,5 +164,175 @@ void UAbyssGameplayCueManager::UpdateDelayLoadDelegateListeners()
 	FCoreUObjectDelegates::GetPostGarbageCollect().RemoveAll(this);
 	FCoreUObjectDelegates::PostLoadMapWithWorld.RemoveAll(this);
 
+	bool bContinue = AbyssGameplayCueManagerCvars::GetEditorLoadModePolicy(AbyssGameplayCueManagerCvars::LoadMode);
+	if (!bContinue) return;
 	
+	UGameplayTagsManager::Get().OnGameplayTagLoadedDelegate.AddUObject(this, &ThisClass::OnGameplayLoaded);
+	FCoreUObjectDelegates::GetPostGarbageCollect().AddUObject(this, &ThisClass::HandlePostGarbageCollect);
+	FCoreUObjectDelegates::PostLoadMapWithWorld.AddUObject(this, &ThisClass::HandlePostLoadMap);
+	
+}
+
+void UAbyssGameplayCueManager::OnGameplayLoaded(const FGameplayTag& GameplayTag)
+{
+	FScopeLock ScopeLock(&LoadedGameplayTagToProcess_CS);
+
+	bool bStartTask = LoadedGameplayTagToProcess.Num() == 0;
+	
+	FUObjectSerializeContext* LoadContext = FUObjectThreadContext::Get().GetSerializeContext();
+	UObject* OwningObj = LoadContext ? LoadContext->SerializedObject : nullptr;
+	LoadedGameplayTagToProcess.Emplace(GameplayTag, OwningObj);
+
+	if (bStartTask)
+	{
+		TGraphTask<FGameplayCueTagThreadSynchronizeGraphTask>::CreateTask()
+			.ConstructAndDispatchWhenReady([]()
+			{
+				if (GIsRunning)
+				{
+					if (UAbyssGameplayCueManager* GCM = Get())
+					{
+						if (IsGarbageCollecting())
+						{
+							GCM->bProcessLoadedTagsAfterGC = true;
+						}
+						else
+						{
+							GCM->ProcessLoadedTags();
+						}
+					}
+				}
+			});
+	}
+}
+
+void UAbyssGameplayCueManager::ProcessLoadedTags()
+{
+	TArray<FLoadedGameplayTagToProcessData> TaskLoadedGameplayTagToProcess;
+	{
+		FScopeLock ScopeLock(&LoadedGameplayTagToProcess_CS);
+		TaskLoadedGameplayTagToProcess = MoveTemp(LoadedGameplayTagToProcess);
+	}
+
+	if (GIsRunning)
+	{
+		if (UGameplayCueSet* CueSet = RuntimeGameplayCueObjectLibrary.CueSet)
+		{
+			for (const auto& LoadedTagData : TaskLoadedGameplayTagToProcess)
+			{
+				if (CueSet->GameplayCueDataMap.Contains(LoadedTagData.Tag))
+				{
+					ProcessTagToPreLoad(LoadedTagData.Tag, LoadedTagData.WeakOwner.Get());
+				}
+			}
+		}
+	}
+}
+
+void UAbyssGameplayCueManager::ProcessTagToPreLoad(FGameplayTag Tag, UObject* OwningObject)
+{
+	bool bContinue = AbyssGameplayCueManagerCvars::GetEditorLoadModePolicy(AbyssGameplayCueManagerCvars::LoadMode);
+	if (!bContinue) return;
+
+	UGameplayCueSet* CueSet = RuntimeGameplayCueObjectLibrary.CueSet;
+	check(CueSet != nullptr);
+
+	int32* DataIdx = CueSet->GameplayCueDataMap.Find(Tag);
+	if (DataIdx && CueSet->GameplayCueData.IsValidIndex(*DataIdx))
+	{
+		const FGameplayCueNotifyData& CueData = CueSet->GameplayCueData[ *DataIdx ];
+
+		UClass* LoadedGameplayCueClass = FindObject<UClass>(nullptr, *CueData.GameplayCueNotifyObj.ToString());
+		if (LoadedGameplayCueClass)
+		{
+			RegisterPreloadedCue(LoadedGameplayCueClass, OwningObject);
+		}
+		else
+		{
+			bool bAlwaysLoadedCue = OwningObject == nullptr;
+			TWeakObjectPtr WeakOwner = OwningObject;
+			StreamableManager.RequestAsyncLoad(CueData.GameplayCueNotifyObj,
+				FStreamableDelegate::CreateUObject(
+					this, &ThisClass::OnPreloadCueComplete, CueData.GameplayCueNotifyObj, WeakOwner, bAlwaysLoadedCue),
+				FStreamableManager::DefaultAsyncLoadPriority,false, false,
+				TEXT("GameplayCueManager"));
+		}
+	}
+	
+}
+
+void UAbyssGameplayCueManager::OnPreloadCueComplete(FSoftObjectPath Path, TWeakObjectPtr<UObject> OwningObject,
+	bool bAlwaysLoadedCue)
+{
+	if (bAlwaysLoadedCue || OwningObject.IsValid())
+	{
+		if (UClass* LoadedGameplayCueClass = Cast<UClass>(Path.ResolveObject()))
+		{
+			RegisterPreloadedCue(LoadedGameplayCueClass, OwningObject.Get());
+		}
+	}
+}
+
+void UAbyssGameplayCueManager::RegisterPreloadedCue(UClass* LoadedGameplayCueClass, UObject* OwningObject)
+{
+	check(LoadedGameplayCueClass)
+
+	const bool bAlwaysLoadedCue = OwningObject == nullptr;
+	if (bAlwaysLoadedCue)
+	{
+		AlwaysLoadedCues.Add(LoadedGameplayCueClass);
+		PreloadedCues.Remove(LoadedGameplayCueClass);
+		PreloadedCueReferencerSet.Remove(LoadedGameplayCueClass);
+	}
+	else if ((OwningObject != LoadedGameplayCueClass) &&
+			 (OwningObject != LoadedGameplayCueClass->GetDefaultObject()) &&
+			 (!AlwaysLoadedCues.Contains(LoadedGameplayCueClass)))
+	{
+		PreloadedCues.Add(LoadedGameplayCueClass);
+		TSet<FObjectKey>& ReferencerSet = PreloadedCueReferencerSet.FindOrAdd(LoadedGameplayCueClass);
+		ReferencerSet.Add(OwningObject);
+	}
+}
+
+void UAbyssGameplayCueManager::HandlePostGarbageCollect()
+{
+	if (bProcessLoadedTagsAfterGC)
+	{
+		ProcessLoadedTags();
+	}
+	bProcessLoadedTagsAfterGC = false;
+}
+
+void UAbyssGameplayCueManager::HandlePostLoadMap(UWorld* World)
+{
+	if (UGameplayCueSet* CueSet = RuntimeGameplayCueObjectLibrary.CueSet)
+	{
+		for (UClass* CueClass : AlwaysLoadedCues)
+		{
+			CueSet->RemoveLoadedClass(CueClass);
+		}
+
+		for (UClass* CueClass : PreloadedCues)
+		{
+			CueSet->RemoveLoadedClass(CueClass);
+		}
+	}
+
+	auto CueIt = PreloadedCues.CreateIterator();
+	for (; CueIt; ++CueIt)
+	{
+		TSet<FObjectKey>& ReferencerSet = PreloadedCueReferencerSet.FindChecked(*CueIt);
+		for (auto RefIt = ReferencerSet.CreateIterator(); RefIt; ++RefIt)
+		{
+			if (!RefIt->ResolveObjectPtr())
+			{
+				RefIt.RemoveCurrent();
+			}
+		}
+		if (ReferencerSet.IsEmpty())
+		{
+			PreloadedCueReferencerSet.Remove(*CueIt);
+			CueIt.RemoveCurrent();
+		}
+	}
 }
