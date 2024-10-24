@@ -39,6 +39,29 @@ public:
 private:
 	/** @see OnCreated() */
 	void UpdateDelayLoadDelegateListeners();
-	
 
+private:
+	struct FLoadedGameplayTagToProcessData
+	{
+		FGameplayTag Tag;
+		TWeakObjectPtr<UObject> WeakOwner;
+
+		FLoadedGameplayTagToProcessData() = default;
+		FLoadedGameplayTagToProcessData(const FGameplayTag& InTag, const TWeakObjectPtr<UObject>& InWeakOwner)
+			: Tag(InTag)
+			, WeakOwner(InWeakOwner)
+		{}
+	};
+
+private:
+	UPROPERTY(Transient)
+	TSet<TObjectPtr<UClass>> PreloadedCues;
+	TMap<FObjectKey, TSet<FObjectKey>> PreloadedCueReferencerSet;
+	
+	UPROPERTY(Transient)
+	TSet<TObjectPtr<UClass>> AlwaysLoadedCues;
+
+	TArray<FLoadedGameplayTagToProcessData> LoadedGameplayTagToProcess;
+	FCriticalSection LoadedGameplayTagToProcess_CS;
+	bool bProcessLoadedTagsAfterGC = false;
 };
