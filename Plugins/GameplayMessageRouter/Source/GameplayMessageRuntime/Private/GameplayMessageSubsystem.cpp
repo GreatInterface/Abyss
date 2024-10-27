@@ -3,6 +3,8 @@
 
 #include "GameplayMessageRuntime/Public/GameplayMessageSubsystem.h"
 
+#include "GameplayMessageRuntime/Public/GameplayMessageType.h"
+
 UGameplayMessageSubsystem& UGameplayMessageSubsystem::Get(const UObject* WorldContextObject)
 {
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert);
@@ -21,4 +23,35 @@ bool UGameplayMessageSubsystem::HasInstance(const UObject* WorldContextObject)
 	UGameplayMessageSubsystem* Router = World ? UGameInstance::GetSubsystem<UGameplayMessageSubsystem>(World->GetGameInstance()) : nullptr;
 
 	return Router != nullptr;
+}
+
+void UGameplayMessageSubsystem::Deinitialize()
+{
+	ListenerMap.Reset();
+	
+	Super::Deinitialize();
+}
+
+void UGameplayMessageSubsystem::BroadcastMessageImpl(FGameplayTag Channel, const UScriptStruct* StructType,
+	const void* MessageBytes)
+{
+	bool bOnInitialTag = true;
+	for (FGameplayTag Tag = Channel; Tag.IsValid(); Tag = Tag.RequestDirectParent())
+	{
+		if (const FChannelListenerList* List = ListenerMap.Find(Tag))
+		{
+			TArray ListenerArray(List->Listeners);
+
+			for (const FGameplayMessageListenerData& Listener : ListenerArray)
+			{
+				if (bOnInitialTag || (Listener.MatchType == EGameplayMessageMatch::PartialMatch))
+				{
+					if (Listener.bHadValidType && !Listener.ListenerStructType.IsValid())
+					{
+						
+					}
+				}
+			}
+		}
+	}
 }
