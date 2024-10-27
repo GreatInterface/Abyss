@@ -20,10 +20,7 @@ public:
 	virtual FInventoryPickup GetPickupInventory() const override;
 
 private:
-
-	UPROPERTY(EditAnywhere, Category=Interact)
-	FInteractionOption InteractOption;
-
-	UPROPERTY(EditAnywhere, Category=Inventory)
+	
+	UPROPERTY(EditAnywhere, Category="Abyss|Inventory")
 	FInventoryPickup InventoryPickup;
 };

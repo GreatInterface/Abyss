@@ -13,7 +13,7 @@ TScriptInterface<IPickupable> UPickupFunctionLibrary::GetFirstPickupableFromActo
 		return PickupActor;
 	}
 
-	TArray<UActorComponent*> PickupCompList = Actor ? Actor->FindComponentByInterface(UPickupable::StaticClass()) : TArray<UActorComponent*>();
+	TArray<UActorComponent*> PickupCompList = Actor ? Actor->GetComponentsByInterface(UPickupable::StaticClass()) : TArray<UActorComponent*>();
 	if (PickupCompList.Num() > 0)
 	{
 		return TScriptInterface<IPickupable>(PickupCompList[0]);

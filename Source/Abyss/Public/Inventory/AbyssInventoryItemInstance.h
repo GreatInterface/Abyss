@@ -22,10 +22,6 @@ public:
 
 	UAbyssInventoryItemInstance(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 	
-	//~Object 
-	virtual void PostInitProperties() override;
-	//~End of Object 
-	
 	UFUNCTION(BlueprintCallable, Category=Inventory)
 	void AddStatTagStack(const FGameplayTag& InTag, int32 StackCount);
 

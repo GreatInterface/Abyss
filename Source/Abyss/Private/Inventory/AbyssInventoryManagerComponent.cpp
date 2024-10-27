@@ -30,6 +30,14 @@ UAbyssInventoryItemInstance* FAbyssInventoryEntryContainer::AddEntry(
 	NewEntry.Instance->SetItemDefinition(ItemClass);
 	NewEntry.StackCount = StackCount;
 
+	for (UAbyssInventoryItemFragment* Fragment : GetDefault<UAbyssInventoryItemDefinition>(ItemClass)->Fragments)
+	{
+		if (Fragment)
+		{
+			Fragment->OnInstanceCreated(NewEntry.Instance);
+		}
+	}
+
 	return NewEntry.Instance;
 }
 

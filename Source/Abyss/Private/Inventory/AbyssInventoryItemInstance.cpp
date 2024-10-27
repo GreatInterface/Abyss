@@ -10,19 +10,6 @@ UAbyssInventoryItemInstance::UAbyssInventoryItemInstance(const FObjectInitialize
 {
 }
 
-void UAbyssInventoryItemInstance::PostInitProperties()
-{
-	UObject::PostInitProperties();
-	
-	for (UAbyssInventoryItemFragment* Fragment : GetDefault<UAbyssInventoryItemDefinition>(ItemDef)->Fragments)
-	{
-		if (Fragment)
-		{
-			Fragment->OnInstanceCreated(this);
-		}
-	}
-}
-
 void UAbyssInventoryItemInstance::AddStatTagStack(const FGameplayTag& InTag, int32 StackCount)
 {
 	StatTagStackContainer.AddStack(InTag, StackCount);

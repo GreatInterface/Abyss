@@ -11,7 +11,7 @@ AAbyssInteractable::AAbyssInteractable()
 void AAbyssInteractable::GatherInteractionOptions(const FInteractionQuery& InteractionQuery,
 	FInteractionOptionBuilder& OptionBuilder)
 {
-	/**OUT*/ OptionBuilder.AddInteractionOption(Option);
+	/**OUT*/ OptionBuilder.AddInteractionOption(InteractOption);
 }
 
 void AAbyssInteractable::CustomizeInteractionEventData(const FGameplayTag& InteractionEventTag,

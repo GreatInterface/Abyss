@@ -22,6 +22,6 @@ public:
 	virtual void CustomizeInteractionEventData(const FGameplayTag& InteractionEventTag, FGameplayEventData& InOutEventData) override;
 
 protected:
-	UPROPERTY(EditAnywhere)
-	FInteractionOption Option;
+	UPROPERTY(EditAnywhere, Category="Abyss|Interact")
+	FInteractionOption InteractOption;
 };

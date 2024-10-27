@@ -13,7 +13,7 @@ AAbyssInteractable_WorldCollect::AAbyssInteractable_WorldCollect()
 void AAbyssInteractable_WorldCollect::GatherInteractionOptions(const FInteractionQuery& InteractionQuery,
 	FInteractionOptionBuilder& OptionBuilder)
 {
-	OptionBuilder.AddInteractionOption(Option);
+	OptionBuilder.AddInteractionOption(InteractOption);
 }
 
 FInventoryPickup AAbyssInteractable_WorldCollect::GetPickupInventory() const

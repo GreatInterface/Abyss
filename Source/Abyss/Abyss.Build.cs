@@ -29,7 +29,10 @@ public class Abyss : ModuleRules
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 		
-		PublicDefinitions.Add("ENABLE_DRAW_DEBUG=1");
+		PublicDefinitions.Add("SHIPPING_ENABLE_DRAW_DEBUG=1");
+		
+		SetupGameplayDebuggerSupport(Target);
+		SetupIrisSupport(Target);
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
