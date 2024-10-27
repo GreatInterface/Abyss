@@ -1,0 +1,46 @@
+# 忽略 Binaries 和 Intermediate 文件夹，它们包含编译后的二进制文件和临时文件
+Binaries/
+Intermediate/
+
+# 忽略保存游戏文件和本地构建文件
+Saved/
+
+# 忽略构建工具生成的项目文件（仅供本地使用）
+.vscode/
+.idea/
+*.xcodeproj
+*.sln
+*.opensdf
+*.sdf
+*.VC.db
+*.VC.VC.opendb
+
+# 忽略构建文件
+DerivedDataCache/
+Build/
+
+# 如果使用了外部插件或内容，忽略这些文件夹
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+
+# 忽略构建后的游戏和部署内容
+*.ipa
+*.apk
+*.app
+*.dll
+*.exe
+*.lib
+*.so
+*.pdb
+
+# Unreal 自动生成的配置和日志文件
+*.log
+*.tmp
+*.bak
+
+# 如果使用了像 Perforce 等版本控制系统，忽略其文件
+*.p4s
+
+# 忽略用户设置
+*.userprefs
+*.user
