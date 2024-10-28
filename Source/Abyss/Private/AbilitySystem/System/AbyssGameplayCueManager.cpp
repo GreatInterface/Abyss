@@ -5,6 +5,7 @@
 #include "GameplayCueSet.h"
 #include "GameplayTagsManager.h"
 #include "Abyss/AbyssLogChannels.h"
+#include "Engine/AssetManager.h"
 
 enum class EAbyssEditorLoadMode
 {
@@ -171,6 +172,27 @@ void UAbyssGameplayCueManager::DumpGameplayCues(const TArray<FString>& Args)
 	UE_LOG(LogAbyss, Log, TEXT(" ... %d cues in preloaded list"), GCM->PreloadedCues.Num());
 	UE_LOG(LogAbyss, Log, TEXT(" ... %d cues loaded on demand"), NumMissingCuesLoaded);
 	UE_LOG(LogAbyss, Log, TEXT(" ... %d cues in total"), GCM->AlwaysLoadedCues.Num() + GCM->PreloadedCues.Num() + NumMissingCuesLoaded);
+}
+
+void UAbyssGameplayCueManager::RefreshGameplayCuePrimaryAsset()
+{
+	const FPrimaryAssetType UFortAssetManager_GameplayCueRefsType(TEXT("GameplayCuesRefs"));
+	const FName UFortAssetManager_GameplayCueRefsName(TEXT("GameplayCuesReferences"));
+	const FName UFortAssetManager_LoadStateClient(TEXT("Client"));
+	
+	TArray<FSoftObjectPath> CuePaths;
+	
+	UGameplayCueSet* CS = GetRuntimeCueSet();
+	if (CS)
+	{
+		CS->GetSoftObjectPaths(CuePaths);
+	}
+
+	FAssetBundleData BundleData;
+	BundleData.AddBundleAssetsTruncated(UFortAssetManager_LoadStateClient, CuePaths);
+
+	FPrimaryAssetId PrimaryAssetId = FPrimaryAssetId(UFortAssetManager_GameplayCueRefsType, UFortAssetManager_GameplayCueRefsName);
+	UAssetManager::Get().AddDynamicAsset(PrimaryAssetId, FSoftObjectPath(), BundleData);
 }
 
 void UAbyssGameplayCueManager::UpdateDelayLoadDelegateListeners()

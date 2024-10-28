@@ -11,6 +11,8 @@ class UGameFeatureAction_AddGameplayCuePath final : public UGameFeatureAction
 {
 	GENERATED_BODY()
 
+public:
+	
 	UGameFeatureAction_AddGameplayCuePath();
 
 	const TArray<FDirectoryPath>& GetDirectoryPathsToAdd() const { return DirectoryPathsToAdd; }

@@ -4,13 +4,30 @@
 
 #include "CoreMinimal.h"
 #include "GameFeaturesProjectPolicies.h"
+#include "GameFeatureStateChangeObserver.h"
 #include "AbyssGameFeaturePolicy.generated.h"
 
 /**
  * 
  */
-UCLASS()
-class ABYSS_API UAbyssGameFeaturePolicy : public UDefaultGameFeaturesProjectPolicies
+UCLASS(MinimalAPI, Config = Game)
+class UAbyssGameFeaturePolicy : public UDefaultGameFeaturesProjectPolicies
 {
 	GENERATED_BODY()
+
+private:
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UObject>> Observes;
+};
+
+UCLASS()
+class UAbyssGameFeatures_AddGameplayCuePaths : public UObject, public IGameFeatureStateChangeObserver
+{
+	GENERATED_BODY()
+
+public:
+
+	virtual void OnGameFeatureRegistering(const UGameFeatureData* GameFeatureData, const FString& PluginName, const FString& PluginURL) override;
+	virtual void OnGameFeatureUnregistering(const UGameFeatureData* GameFeatureData, const FString& PluginName, const FString& PluginURL) override;
+	
 };
