@@ -3,12 +3,17 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayMessageType.h"
 #include "GameplayTagContainer.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "GameplayMessageSubsystem.generated.h"
 
+enum class EGameplayMessageMatch : uint8;
+struct FGameplayMessageListenerHandle;
 struct FGameplayTag;
 struct FGameplayMessageListenerData;
+
+GAMEPLAYMESSAGERUNTIME_API DECLARE_LOG_CATEGORY_EXTERN(LogGameplayMessageSubsystem, Log, All);
 
 UCLASS()
 class GAMEPLAYMESSAGERUNTIME_API UGameplayMessageSubsystem : public UGameInstanceSubsystem
@@ -30,20 +35,86 @@ public:
 	void BroadcastMessage(FGameplayTag Channel, const FMessageStructType& Message)
 	{
 		const UScriptStruct* StructType = TBaseStructure<FMessageStructType>::Get();
-		//TODO :
-		unimplemented();
+		BroadcastMessageImpl(Channel, StructType, &Message);
 	}
+	
+	template<typename FMessageStructType>
+	FGameplayMessageListenerHandle RegisterListener(FGameplayTag Channel,
+		FGameplayMessageListenerParams<FMessageStructType>& Params)
+	{
+		FGameplayMessageListenerHandle Handle;
+
+		if (Params.OnMessageReceivedCallback)
+		{
+			auto ThunkCallback = [InnerCallback = Params.OnMessageReceivedCallback](
+				FGameplayTag ActualTag, const UScriptStruct* SenderStructType, const void* SenderPayload)
+			{
+				InnerCallback(ActualTag, *reinterpret_cast<const FMessageStructType*>(SenderPayload));
+			};
+
+			const UScriptStruct* StructType = TBaseStructure<FMessageStructType>::Get();
+			Handle = RegisterListenerImpl(Channel, ThunkCallback, StructType, Params.MatchType);
+		}
+
+		return Handle;
+	}
+
+	template<typename FMessageStructType, typename TOwner = UObject>
+	FGameplayMessageListenerHandle RegisterListener(FGameplayTag Channel, TOwner* Obj,
+		void(TOwner::* Function)(FGameplayTag, const FMessageStructType&))
+	{
+		TWeakObjectPtr<TOwner> WeakObject(Obj);
+		return RegisterListener<FMessageStructType>(Channel,
+			[WeakObject, Function](FGameplayTag Channel, const FMessageStructType& Payload)
+			{
+				if (TOwner* StringObj = WeakObject.Get())
+				{
+					(StringObj->*Function)(Channel, Payload);
+				}
+			});
+	}
+
+	template<typename FMessageStructType>
+	FGameplayMessageListenerHandle RegisterListener(
+		FGameplayTag Channel,
+		TFunction<void(FGameplayTag, const FMessageStructType&)>&& Callback,
+		EGameplayMessageMatch MatchType = EGameplayMessageMatch::ExactMatch)
+	{
+		auto ThunkCallback = [InnerCallback = MoveTemp(Callback)](FGameplayTag ActualTag,
+			const UScriptStruct* SenderStructType, const void* SenderPayload)
+		{
+			InnerCallback(ActualTag, *reinterpret_cast<const FMessageStructType*>(SenderStructType));	
+		};
+
+		const UScriptStruct* StructType = TBaseStructure<FMessageStructType>::Get();
+		return RegisterListenerImpl(Channel, ThunkCallback, StructType, MatchType);
+	}
+	
+	void UnregisterListener(FGameplayMessageListenerHandle Handle);
+
+protected:
+
+	UFUNCTION(BlueprintCallable, CustomThunk, Category=Messaging, meta=(CustomStructureParam="Message", AllowAbstrast="false", DisplayName="Broadcast Message"))
+	void K2_BroadcastMessage(FGameplayTag Channel, const int32& Message);
 
 private:
 
 	void BroadcastMessageImpl(FGameplayTag Channel, const UScriptStruct* StructType, const void* MessageBytes);
 
+	FGameplayMessageListenerHandle RegisterListenerImpl(
+		FGameplayTag Channel,
+		TFunction<void(FGameplayTag, const UScriptStruct*, const void*)>&& Callback,
+		const UScriptStruct* StructType,
+		EGameplayMessageMatch MatchType);
+
+	void UnregisterListenerImpl(FGameplayTag Channel, int32 HandleID);
+
 private:
 	struct FChannelListenerList
 	{
-		TArray<FGameplayMessageListenerData> Listeners;
+		TArray<FGameplayMessageListenerData> ListenerDatas;
 		int32 HandleID = 0;
 	};
 
-	TMap<FGameplayTag, FChannelListenerList> ListenerMap;
+	TMap<FGameplayTag, FChannelListenerList> TagToListenerMap;
 };
