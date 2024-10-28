@@ -15,6 +15,10 @@ struct FGameplayMessageListenerData;
 
 GAMEPLAYMESSAGERUNTIME_API DECLARE_LOG_CATEGORY_EXTERN(LogGameplayMessageSubsystem, Log, All);
 
+/**
+ * 用于管理和广播消息的GameInstanceSubsystem子系统类
+ * 支持在多个频道（通过FGameplayTag Channel）上注册监听器，以响应不同类型的消息
+ */
 UCLASS()
 class GAMEPLAYMESSAGERUNTIME_API UGameplayMessageSubsystem : public UGameInstanceSubsystem
 {
@@ -31,6 +35,13 @@ public:
 
 	virtual void Deinitialize() override;
 
+	/**
+	 * 广播消息
+	 * 
+	 * @tparam FMessageStructType 消息结构体类型
+	 * @param Channel 频道标签
+	 * @param Message 需要广播的结构体
+	 */
 	template<typename FMessageStructType>
 	void BroadcastMessage(FGameplayTag Channel, const FMessageStructType& Message)
 	{
