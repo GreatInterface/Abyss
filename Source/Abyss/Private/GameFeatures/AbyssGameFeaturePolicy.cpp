@@ -10,6 +10,41 @@
 #include "AbilitySystem/System/AbyssGameplayCueManager.h"
 #include "GameFeatures/GameFeatureAction_AddGameplayCuePath.h"
 
+UAbyssGameFeaturePolicy& UAbyssGameFeaturePolicy::Get()
+{
+	return UGameFeaturesSubsystem::Get().GetPolicy<UAbyssGameFeaturePolicy>();
+}
+
+UAbyssGameFeaturePolicy::UAbyssGameFeaturePolicy(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+}
+
+void UAbyssGameFeaturePolicy::InitGameFeatureManager()
+{
+	Observes.Add(NewObject<UAbyssGameFeatures_AddGameplayCuePaths>());
+
+	UGameFeaturesSubsystem& Subsystem = UGameFeaturesSubsystem::Get();
+	for (UObject* Obj : Observes)
+	{
+		Subsystem.AddObserver(Obj);
+	}
+	
+	Super::InitGameFeatureManager();
+}
+
+void UAbyssGameFeaturePolicy::ShutdownGameFeatureManager()
+{
+	Super::ShutdownGameFeatureManager();
+
+	UGameFeaturesSubsystem& Subsystem = UGameFeaturesSubsystem::Get();
+	for (UObject* Obj : Observes)
+	{
+		Subsystem.RemoveObserver(Obj);
+	}
+	Observes.Empty();
+}
+
 void UAbyssGameFeatures_AddGameplayCuePaths::OnGameFeatureRegistering(const UGameFeatureData* GameFeatureData,
                                                                       const FString& PluginName, const FString& PluginURL)
 {

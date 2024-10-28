@@ -15,6 +15,17 @@ class UAbyssGameFeaturePolicy : public UDefaultGameFeaturesProjectPolicies
 {
 	GENERATED_BODY()
 
+public:
+
+	static UAbyssGameFeaturePolicy& Get();
+
+	UAbyssGameFeaturePolicy(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
+	//~UGameFeatureProjectPolicies interface
+	virtual void InitGameFeatureManager() override;
+	virtual void ShutdownGameFeatureManager() override;
+	//~End of UGameFeatureProjectPolicies interface
+
 private:
 	UPROPERTY(Transient)
 	TArray<TObjectPtr<UObject>> Observes;
