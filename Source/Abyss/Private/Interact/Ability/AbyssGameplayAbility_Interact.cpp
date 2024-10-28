@@ -12,6 +12,8 @@
 #include "UI/IndicatorSystem/IndicatorDescriptor.h"
 
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_Ability_Interaction_Activate, "Ability.Interaction.Activate")
+/** Declare in AbyssInteractDurationMessage.h */
+UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_INTENACTION_DURATION_MESSAGE, "Ability.Interaction.Duration.Message")
 
 UAbyssGameplayAbility_Interact::UAbyssGameplayAbility_Interact(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
