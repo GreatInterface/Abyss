@@ -97,6 +97,8 @@ protected:
 	UFUNCTION(BlueprintCallable, CustomThunk, Category=Messaging, meta=(CustomStructureParam="Message", AllowAbstrast="false", DisplayName="Broadcast Message"))
 	void K2_BroadcastMessage(FGameplayTag Channel, const int32& Message);
 
+	DECLARE_FUNCTION(execK2_BroadcastMessage);
+
 private:
 
 	void BroadcastMessageImpl(FGameplayTag Channel, const UScriptStruct* StructType, const void* MessageBytes);

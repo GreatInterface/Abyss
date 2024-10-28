@@ -53,6 +53,23 @@ void UGameplayMessageSubsystem::K2_BroadcastMessage(FGameplayTag Channel, const 
 	checkNoEntry();
 }
 
+DEFINE_FUNCTION(UGameplayMessageSubsystem::execK2_BroadcastMessage)
+{
+	P_GET_STRUCT(FGameplayTag, Channel);
+
+	Stack.MostRecentPropertyAddress = nullptr;
+	Stack.StepCompiledIn<FStructProperty>(nullptr);
+	void* MessagePtr = Stack.MostRecentPropertyAddress;
+	FStructProperty* StructProp = CastField<FStructProperty>(Stack.MostRecentProperty);
+
+	P_FINISH;
+
+	if (ensure((StructProp) && (StructProp->Struct) && (MessagePtr)))
+	{
+		P_THIS->BroadcastMessageImpl(Channel, StructProp->Struct, MessagePtr);
+	}
+}
+
 void UGameplayMessageSubsystem::BroadcastMessageImpl(FGameplayTag Channel, const UScriptStruct* StructType,
                                                      const void* MessageBytes)
 {
