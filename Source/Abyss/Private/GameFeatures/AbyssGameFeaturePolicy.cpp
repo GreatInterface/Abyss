@@ -3,6 +3,7 @@
 
 #include "GameFeatures/AbyssGameFeaturePolicy.h"
 
+#include "AbilitySystemGlobals.h"
 #include "GameFeatureAction.h"
 #include "GameFeatureData.h"
 #include "GameplayCueSet.h"
@@ -51,5 +52,31 @@ void UAbyssGameFeatures_AddGameplayCuePaths::OnGameFeatureRegistering(const UGam
 void UAbyssGameFeatures_AddGameplayCuePaths::OnGameFeatureUnregistering(const UGameFeatureData* GameFeatureData,
 	const FString& PluginName, const FString& PluginURL)
 {
-	IGameFeatureStateChangeObserver::OnGameFeatureUnregistering(GameFeatureData, PluginName, PluginURL);
+	const FString PluginRootPath(TEXT("/") + PluginName);
+
+	for (const UGameFeatureAction* Action : GameFeatureData->GetActions())
+	{
+		if (const UGameFeatureAction_AddGameplayCuePath* GFA_AddGameplayCue = Cast<UGameFeatureAction_AddGameplayCuePath>(Action))
+		{
+			const TArray<FDirectoryPath>& DirsToAdd = GFA_AddGameplayCue->GetDirectoryPathsToAdd();
+
+			if (UGameplayCueManager* GCM = UAbilitySystemGlobals::Get().GetGameplayCueManager())
+			{
+				int32 NumRemoved = 0;
+				for (const FDirectoryPath& Directory : DirsToAdd)
+				{
+					FString MutablePath = Directory.Path;
+					UGameFeaturesSubsystem::FixPluginPackagePath(MutablePath, PluginRootPath, false);
+					NumRemoved += GCM->RemoveGameplayCueNotifyPath(MutablePath, false);
+				}
+
+				ensure(NumRemoved == DirsToAdd.Num());
+
+				if (NumRemoved > 0)
+				{
+					GCM->InitializeRuntimeObjectLibrary();
+				}
+			}
+		}
+	}
 }
