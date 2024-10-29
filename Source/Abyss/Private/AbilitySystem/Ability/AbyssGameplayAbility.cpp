@@ -30,10 +30,26 @@ void UAbyssGameplayAbility::OnGiveAbility(const FGameplayAbilityActorInfo* Actor
 	TryActivateAbilityOnSpawn(ActorInfo, Spec);
 }
 
+void UAbyssGameplayAbility::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+	const FGameplayEventData* TriggerEventData)
+{
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+}
+
+void UAbyssGameplayAbility::ApplyAbilityTagsToGameplayEffectSpec(FGameplayEffectSpec& Spec,
+	FGameplayAbilitySpec* AbilitySpec) const
+{
+	Super::ApplyAbilityTagsToGameplayEffectSpec(Spec, AbilitySpec);
+
+	//TODO : 
+}
+
 void UAbyssGameplayAbility::TryActivateAbilityOnSpawn(const FGameplayAbilityActorInfo* ActorInfo,
                                                       const FGameplayAbilitySpec& Spec) const
 {
-	const bool bIsPredicting = (Spec.Ability->GetCurrentActivationInfo().ActivationMode == EGameplayAbilityActivationMode::Predicting);
+	const bool bIsPredicting = (Spec.ActivationInfo.ActivationMode == EGameplayAbilityActivationMode::Predicting);
+		// && (Spec.IsActive() && Spec.Ability->IsInstantiated());
 
 	if (ActorInfo && !Spec.IsActive() && !bIsPredicting && (ActivationPolicy == EAbyssAbilityActivationPolicy::OnSpawn))
 	{

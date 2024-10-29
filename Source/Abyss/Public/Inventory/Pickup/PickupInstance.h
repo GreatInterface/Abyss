@@ -14,8 +14,7 @@ public:
 
 	UPROPERTY(EditAnywhere)
 	int32 StackCount = 1;
-
-
+	
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<UAbyssInventoryItemDefinition> ItemDef;
 };
