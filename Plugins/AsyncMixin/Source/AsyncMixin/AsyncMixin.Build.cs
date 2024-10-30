@@ -25,7 +25,8 @@ public class AsyncMixin : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core",
+				"Core", 
+				"Engine",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -35,7 +36,6 @@ public class AsyncMixin : ModuleRules
 			new string[]
 			{
 				"CoreUObject",
-				"Engine",
 				"Slate",
 				"SlateCore",
 				// ... add private dependencies that you statically link with here ...	

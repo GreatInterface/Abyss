@@ -2,19 +2,120 @@
 
 #include "AsyncMixin.h"
 
-#define LOCTEXT_NAMESPACE "FAsyncMixinModule"
+DEFINE_LOG_CATEGORY_STATIC(LogAsyncMixin, Log, All);
 
-void FAsyncMixinModule::StartupModule()
+
+FAsyncMixin::FLoadingState::FAsyncStep::FAsyncStep(const FSimpleDelegate& InUserCallback)
+	: UserCallback(InUserCallback)
 {
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
 }
 
-void FAsyncMixinModule::ShutdownModule()
+FAsyncMixin::FLoadingState::FAsyncStep::FAsyncStep(const FSimpleDelegate& InUserCallback,
+	const TSharedPtr<FStreamableHandle> InStreamableHandle)
+		: UserCallback(InUserCallback)
+		, StreamingHandle(InStreamableHandle)
 {
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
 }
 
-#undef LOCTEXT_NAMESPACE
-	
-IMPLEMENT_MODULE(FAsyncMixinModule, AsyncMixin)
+FAsyncMixin::FLoadingState::FAsyncStep::FAsyncStep(const FSimpleDelegate& InUserCallback,
+	const TSharedPtr<FAsyncCondition>& InCondition)
+		: UserCallback(InUserCallback)
+		, Condition(InCondition)
+{
+}
+
+FAsyncMixin::FLoadingState::FAsyncStep::~FAsyncStep()
+{
+}
+
+bool FAsyncMixin::FLoadingState::FAsyncStep::ExecuteUserCallback()
+{
+	const bool Result = UserCallback.ExecuteIfBound();
+	UserCallback.Unbind();
+
+	return Result;
+}
+
+bool FAsyncMixin::FLoadingState::FAsyncStep::IsComplete() const
+{
+	//TODO : 
+}
+
+void FAsyncMixin::FLoadingState::FAsyncStep::Cancel()
+{
+}
+
+bool FAsyncMixin::FLoadingState::FAsyncStep::BindCompleteDelegate(const FSimpleDelegate& NewDelegate)
+{
+}
+
+bool FAsyncMixin::FLoadingState::FAsyncStep::IsCompleteDelegateBound() const
+{
+}
+
+/** ---------------------------------------------------------------------------------------
+				FAsyncCondition
+-------------------------------------------------------------------------------------------*/
+
+FAsyncCondition::~FAsyncCondition()
+{
+	FTSTicker::GetCoreTicker().RemoveTicker(RepeatHandle);
+}
+
+bool FAsyncCondition::IsComplete() const
+{
+	if (UserCondition.IsBound())
+	{
+		const EAsyncConditionResult Result = UserCondition.Execute();
+		return Result == EAsyncConditionResult::Complete;
+	}
+
+	// Please see TryToContinue()
+	// if Complete,UserCondition will Unbind;
+	return true;
+}
+
+bool FAsyncCondition::BindCompleteDelegate(const FSimpleDelegate& NewDelegate)
+{
+	if (IsComplete())
+	{
+		//Already Complete
+		return false;
+	}
+
+	CompletionDelegate = NewDelegate;
+
+	if (!RepeatHandle.IsValid())
+	{
+		RepeatHandle = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateSP(this, &FAsyncCondition::TryToContinue), 0.16);
+	}
+
+	return true;
+}
+
+bool FAsyncCondition::TryToContinue(float DeltaTime)
+{
+	QUICK_SCOPE_CYCLE_COUNTER(STAT_FAsyncCondition_TryToContinue);
+
+	UE_LOG(LogAsyncMixin, Verbose, TEXT("[0x%X] AsyncCondition : TryToContinue"), this)
+
+	if (UserCondition.IsBound())
+	{
+		const EAsyncConditionResult Result = UserCondition.Execute();
+
+		switch (Result)
+		{
+		case EAsyncConditionResult::TryAgain:
+			return true;
+		case EAsyncConditionResult::Complete:
+			RepeatHandle.Reset();
+			UserCondition.Unbind();
+
+			CompletionDelegate.ExecuteIfBound();
+			CompletionDelegate.Unbind();
+			break;
+		}
+	}
+
+	return false;
+}
