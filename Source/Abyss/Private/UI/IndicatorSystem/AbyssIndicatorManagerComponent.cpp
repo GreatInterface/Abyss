@@ -29,7 +29,7 @@ void UAbyssIndicatorManagerComponent::AddIndicator(UIndicatorDescriptor* Indicat
 	check(IndicatorDescriptor);
 	IndicatorDescriptor->SetManagerComponent(this);
 	OnIndicatorAddedEvent.Broadcast(IndicatorDescriptor);
-	Indicators.Add(MoveTemp(IndicatorDescriptor));
+	Indicators.Add(IndicatorDescriptor);
 }
 
 void UAbyssIndicatorManagerComponent::RemoveIndicator(UIndicatorDescriptor* IndicatorDescriptor)
@@ -40,6 +40,6 @@ void UAbyssIndicatorManagerComponent::RemoveIndicator(UIndicatorDescriptor* Indi
 
 		OnIndicatorRemovedEvent.Broadcast(IndicatorDescriptor);
 
-		Indicators.Remove(MoveTemp(IndicatorDescriptor));
+		Indicators.Remove(IndicatorDescriptor);
 	}
 }

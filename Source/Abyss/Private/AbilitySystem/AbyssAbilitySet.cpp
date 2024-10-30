@@ -86,10 +86,9 @@ void UAbyssAbilitySet::GiveToAbilitySystem(UAbyssAbilitySystemComponent* AbyssAS
 			continue;
 		}
 
-		// UAbyssGameplayAbility* AbilityCDO = GrantedAbility.Ability->GetDefaultObject<UAbyssGameplayAbility>();
-		UAbyssGameplayAbility* Ability = NewObject<UAbyssGameplayAbility>(AbyssASC, GrantedAbility.Ability);
+		UAbyssGameplayAbility* AbilityCDO = GrantedAbility.Ability->GetDefaultObject<UAbyssGameplayAbility>();
 		
-		FGameplayAbilitySpec AbilitySpec(Ability, GrantedAbility.AbilityLevel);
+		FGameplayAbilitySpec AbilitySpec(AbilityCDO, GrantedAbility.AbilityLevel);
 		AbilitySpec.SourceObject = SourceObject;
 		AbilitySpec.GetDynamicSpecSourceTags().AddTag(GrantedAbility.InputTag);
 
