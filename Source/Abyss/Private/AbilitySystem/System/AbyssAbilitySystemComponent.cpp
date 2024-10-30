@@ -191,10 +191,14 @@ void UAbyssAbilitySystemComponent::AbilitySpecInputPressed(FGameplayAbilitySpec&
 	//UGameplayAbility::bReplicateInputDirectly（直接输入复制）不被支持，因为直接复制输入存在一些同步和预测问题
 	//取而代之的是，建议使用复制的事件（replicated events）来进行输入同步，以确保同步的准确性，
 	//	特别是对于等待输入的任务，如 WaitInputPress
-	if (Spec.IsActive())
+	if (Spec.IsActive() && Spec.Ability->IsInstantiated())
 	{
 		//InvokeReplicatedEvent 方法用于触发 EAbilityGenericReplicatedEvent::InputPressed 事件，这一事件表明用户按下了输入。
 		//这里触发的 InputPressed 事件并不会在这里进行复制，但可以在侦听者监听该事件后，将其复制到服务器端。
+		InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, Spec.Handle, Spec.Ability->GetCurrentActivationInfo().GetActivationPredictionKey());
+	}
+	else if (Spec.IsActive())
+	{
 		InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, Spec.Handle, Spec.ActivationInfo.GetActivationPredictionKey());
 	}
 }
@@ -204,8 +208,12 @@ void UAbyssAbilitySystemComponent::AbilitySpecInputReleased(FGameplayAbilitySpec
 	Super::AbilitySpecInputReleased(Spec);
 
 	//注释请看AbilitySpecInputPressed
-	if (Spec.IsActive())
+	if (Spec.IsActive() && Spec.Ability->IsInstantiated())
+	{
+		InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, Spec.Handle, Spec.Ability->GetCurrentActivationInfo().GetActivationPredictionKey());
+	}
+	else if (Spec.IsActive())
 	{
 		InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, Spec.Handle, Spec.ActivationInfo.GetActivationPredictionKey());
-	}	
+	}
 }
