@@ -2,7 +2,118 @@
 
 #include "AsyncMixin.h"
 
+#include "Engine/AssetManager.h"
+
 DEFINE_LOG_CATEGORY_STATIC(LogAsyncMixin, Log, All);
+
+
+FAsyncMixin::FAsyncMixin()
+{
+}
+
+FAsyncMixin::~FAsyncMixin()
+{
+	check(IsInGameThread())
+
+	Loading.Remove(this);
+}
+
+void FAsyncMixin::AsyncLoad(FSoftObjectPath SoftObjectPath, const FSimpleDelegate& Callback)
+{
+	FindOrAddLoadingState().AsyncLoad(SoftObjectPath, Callback);
+}
+
+void FAsyncMixin::AsyncLoad(const TArray<FSoftObjectPath>& SoftObjectPaths, const FSimpleDelegate& Callback)
+{
+	FindOrAddLoadingState().AsyncLoad(SoftObjectPaths, Callback);
+}
+
+void FAsyncMixin::AsyncPreloadPrimaryAssetsAndBundles(const TArray<FPrimaryAssetId>& AssetIds,
+	const TArray<FName>& LoadBundles, const FSimpleDelegate& Callback)
+{
+	FindOrAddLoadingState().AsyncPreloadPrimaryAssetAndBundles(AssetIds, LoadBundles, Callback);
+}
+
+void FAsyncMixin::AsyncCondition(TSharedRef<FAsyncCondition> Condition, const FSimpleDelegate& Callback)
+{
+	FindOrAddLoadingState().AsyncCondition(Condition, Callback);
+}
+
+void FAsyncMixin::AsyncEvent(const FSimpleDelegate& Callback)
+{
+	FindOrAddLoadingState().AsyncEvent(Callback);
+}
+
+void FAsyncMixin::StartAsyncLoading()
+{
+	if (IsLoadingInProgressOrPending())
+	{
+		FindOrAddLoadingState().Start();
+	}
+	else
+	{
+		OnStartedLoading();
+		OnFinishedLoading();
+	}
+}
+
+void FAsyncMixin::CancelAsyncLoading()
+{
+	if (HasLoadingState())
+	{
+		FindOrAddLoadingState().CancelAndDestroy();
+	}
+}
+
+bool FAsyncMixin::IsAsyncLoadingInProgress() const
+{
+	if (HasLoadingState())
+	{
+		return GetLoadingStateConst().IsLoadingInProgress();
+	}
+
+	return false;
+}
+
+const FAsyncMixin::FLoadingState& FAsyncMixin::GetLoadingStateConst() const
+{
+	check(IsInGameThread());
+	return Loading.FindChecked(this).Get();
+}
+
+FAsyncMixin::FLoadingState& FAsyncMixin::FindOrAddLoadingState()
+{
+	check(IsInGameThread());
+
+	if (TSharedRef<FLoadingState>* LoadingState = Loading.Find(this))
+	{
+		return (*LoadingState).Get();
+	}
+
+	return Loading.Add(this, MakeShared<FLoadingState>(*this)).Get();
+}
+
+bool FAsyncMixin::HasLoadingState() const
+{
+	check(IsInGameThread())
+
+	return Loading.Contains(this);
+}
+
+bool FAsyncMixin::IsLoadingInProgressOrPending() const
+{
+	if (HasLoadingState())
+	{
+		return GetLoadingStateConst().IsLoadingInProgressOrPending();
+	}
+
+	return false;
+}
+
+/** ---------------------------------------------------------------------------------------
+				FLoadingState
+-------------------------------------------------------------------------------------------*/
+
 
 
 FAsyncMixin::FLoadingState::FLoadingState(FAsyncMixin& InOwner)
@@ -38,6 +149,76 @@ void FAsyncMixin::FLoadingState::CancelAndDestroy()
 {
 	CancelOnly(false);
 	RequestDestroyThisMemory();
+}
+
+void FAsyncMixin::FLoadingState::AsyncLoad(FSoftObjectPath SoftObjectPath, const FSimpleDelegate& DelegateToCall)
+{
+	UE_LOG(LogAsyncMixin, Verbose, TEXT("[0x%p] AsyncLoad '%s'"), this, *SoftObjectPath.ToString());
+
+	AsyncSteps.Add(MakeUnique<FAsyncStep>(
+		DelegateToCall,
+		UAssetManager::GetStreamableManager().RequestAsyncLoad(
+			SoftObjectPath, FStreamableDelegate(), FStreamableManager::AsyncLoadHighPriority,
+			false, false, TEXT("AsyncMixin"))));
+
+	TryScheduleStart();
+}
+
+void FAsyncMixin::FLoadingState::AsyncLoad(const TArray<FSoftObjectPath>& SoftObjectPaths,
+	const FSimpleDelegate& DelegateToCall)
+{
+	const FString& Paths = FString::JoinBy(SoftObjectPaths, TEXT(", "), [](const FSoftObjectPath& SoftObjectPath) { return FString::Printf(TEXT("'%s'"), *SoftObjectPath.ToString()); });
+	UE_LOG(LogAsyncMixin, Verbose, TEXT("[0x%p] AsyncLoad [%s]"), this, *Paths);
+
+	AsyncSteps.Add(MakeUnique<FAsyncStep>(
+		DelegateToCall,
+		UAssetManager::GetStreamableManager().RequestAsyncLoad(
+			SoftObjectPaths, FStreamableDelegate(), FStreamableManager::AsyncLoadHighPriority,
+			false, false, TEXT("AsyncMixin"))));
+
+	TryScheduleStart();
+}
+
+void FAsyncMixin::FLoadingState::AsyncPreloadPrimaryAssetAndBundles(const TArray<FPrimaryAssetId>& AssetIds,
+	const TArray<FName>& LoadBundles, const FSimpleDelegate& DelegateToCall)
+{
+	{		
+		const FString& Assets = FString::JoinBy(AssetIds, TEXT(", "), [](const FPrimaryAssetId& AssetId) { return AssetId.ToString(); });
+		const FString& Bundles = FString::JoinBy(LoadBundles, TEXT(", "), [](const FName& LoadBundle) { return LoadBundle.ToString(); });
+		UE_LOG(LogAsyncMixin, Verbose, TEXT("[0x%p]  AsyncPreload Assets [%s], Bundles[%s]"), this, *Assets, *Bundles);
+	}
+
+	TSharedPtr<FStreamableHandle> StreamingHandle;
+
+	if (AssetIds.Num() > 0)
+	{
+		bPreloadedBundles = true;
+
+		const bool bLoadRecursive = true;
+		StreamingHandle = UAssetManager::Get().PreloadPrimaryAssets(AssetIds, LoadBundles, bLoadRecursive);
+	}
+
+	AsyncSteps.Add(MakeUnique<FAsyncStep>(DelegateToCall, StreamingHandle));
+
+	TryScheduleStart();
+}
+
+void FAsyncMixin::FLoadingState::AsyncCondition(TSharedRef<FAsyncCondition> Condition, const FSimpleDelegate& Callback)
+{
+	UE_LOG(LogAsyncMixin, Verbose, TEXT("[0x%p] AsyncCondition '0x%p'"), this, &Condition.Get());
+
+	AsyncSteps.Add(MakeUnique<FAsyncStep>(Callback, Condition));
+
+	TryScheduleStart();
+}
+
+void FAsyncMixin::FLoadingState::AsyncEvent(const FSimpleDelegate& Callback)
+{
+	UE_LOG(LogAsyncMixin, Verbose, TEXT("[0x%p] AsyncEvent"), this);
+
+	AsyncSteps.Add(MakeUnique<FAsyncStep>(Callback));
+
+	TryScheduleStart();
 }
 
 bool FAsyncMixin::FLoadingState::IsLoadingInProgress() const
@@ -183,7 +364,7 @@ void FAsyncMixin::FLoadingState::RequestDestroyThisMemory()
 
 		DestroyMemoryDelegate = FTSTicker::GetCoreTicker().AddTicker(FTickerDelegate::CreateLambda([this](float DeltaTime)
 		{
-			//Loading.Remove(&OwnerRef);
+			FAsyncMixin::Loading.Remove(&OwnerRef);
 			return false;
 		}));
 	}
