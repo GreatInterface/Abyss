@@ -12,6 +12,20 @@ private:
 	class FLoadingState : public TSharedFromThis<FLoadingState>
 	{
 
+	public:
+		FLoadingState(FAsyncMixin& InOwner);
+		virtual ~FLoadingState();
+
+		void Start();
+
+		void CancelAndDestroy();
+
+
+		bool IsLoadingComplete() const {return !IsLoadingInProgress();}
+		bool IsLoadingInProgress() const;
+		bool IsLoadingInProgressOrPending() const;
+		bool IsPendingDestroy() const;
+		
 	private:
 		class FAsyncStep
 		{
@@ -44,7 +58,26 @@ private:
 		};
 
 	private:
+		void CancelOnly(bool bDestroying);
+		void CancelStartTimer();
+		void TryScheduleStart();
+		void TryCompleteAsyncLoading();
+		void CompleteAsyncLoading();
 		
+		void RequestDestroyThisMemory();
+		void CancelDestroyThisMemory(bool bDestroying);
+	private:
+		FAsyncMixin& OwnerRef;
+
+		bool bPreloadedBundles = false;
+		bool bHasStarted = false;
+
+		int32 CurrentAsyncStep = 0;
+		TArray<TUniquePtr<FAsyncStep>> AsyncSteps;
+		TArray<TUniquePtr<FAsyncStep>> AsyncStepsPendingDestruction;
+
+		FTSTicker::FDelegateHandle StartTimerDelegate;
+		FTSTicker::FDelegateHandle DestroyMemoryDelegate;
 	};
 };
 
