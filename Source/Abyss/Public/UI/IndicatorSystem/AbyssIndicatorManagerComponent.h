@@ -18,7 +18,8 @@ class ABYSS_API UAbyssIndicatorManagerComponent : public UControllerComponent
 public:
 	UAbyssIndicatorManagerComponent(const FObjectInitializer& ObjectInitializer);
 
-	static UAbyssIndicatorManagerComponent* GetIndicatorManagerComponent(AController* InController);
+	static UAbyssIndicatorManagerComponent* GetComponent(AController* InController);
+	const TArray<UIndicatorDescriptor*>& GetIndicators() const { return Indicators; } 
 
 	UFUNCTION(BlueprintCallable, Category = "UI|Indicator")
 	void AddIndicator(UIndicatorDescriptor* IndicatorDescriptor);

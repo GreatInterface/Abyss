@@ -41,7 +41,7 @@ void UAbyssGameplayAbility_Interact::UpdateInteractions(const TArray<FInteractio
 {
 	if(AAbyssPlayerController* AbyssPC = GetAbyssPlayerControllerFromActorInfo())
 	{
-		if(UAbyssIndicatorManagerComponent* IndicatorManagerComp = UAbyssIndicatorManagerComponent::GetIndicatorManagerComponent(AbyssPC))
+		if(UAbyssIndicatorManagerComponent* IndicatorManagerComp = UAbyssIndicatorManagerComponent::GetComponent(AbyssPC))
 		{
 			for(UIndicatorDescriptor* Indicator : Indicators)
 			{

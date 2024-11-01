@@ -6,8 +6,13 @@
 #include "UObject/Object.h"
 #include "IndicatorDescriptor.generated.h"
 
-
+class UIndicatorDescriptor;
 class UAbyssIndicatorManagerComponent;
+
+struct FIndicatorProjection
+{
+	bool Project(const UIndicatorDescriptor& IndicatorDescriptor, const FSceneViewProjectionData& InProjectionData, const FVector2f& ScreenSize, FVector& ScreenPositionWithDepth);
+};
 
 UCLASS()
 class ABYSS_API UIndicatorDescriptor : public UObject
@@ -55,8 +60,8 @@ public:
 	}
 
 	UAbyssIndicatorManagerComponent* GetManagerComponent() const { return ManagerPtr.Get(); }
-	void SetManagerComponent(UAbyssIndicatorManagerComponent* InManager); 
-	
+	void SetManagerComponent(UAbyssIndicatorManagerComponent* InManager);
+
 private:
 
 	UPROPERTY()
@@ -73,4 +78,44 @@ private:
 	
 	UPROPERTY()
 	TWeakObjectPtr<UAbyssIndicatorManagerComponent> ManagerPtr;
+
+	TWeakPtr<SWidget> Content;
+	TWeakPtr<SWidget> CanvasHost;
+	
+	friend class SActorCanvas;
+	
+public:
+	
+	bool CanAutomaticallyRemove() const
+	{
+		return bAutoRemoveWhenIndicatorComponentIsNull && !IsValid(GetSceneComponent());
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintGetter)
+	bool GetVisible() const { return IsValid(GetSceneComponent()) && bVisible; }
+	UFUNCTION(BlueprintCallable, BlueprintSetter)
+	void SetDesiredVisibility(bool InVisible)
+	{
+		bVisible = InVisible;
+	}
+
+	bool GetClampToScreen() const { return bClampToScreen; };
+	void SetClampToScreen(bool Value) { bClampToScreen = Value; }
+	
+	int GetPriority() const { return Priority; }
+	void SetPriority(int32 InPriority) { Priority = InPriority; }
+
+public:
+	TWeakObjectPtr<UUserWidget> IndicatorWidget;
+	
+private:
+	UPROPERTY(BlueprintGetter=GetVisible, BlueprintSetter=SetDesiredVisibility)
+	bool bVisible = true;
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess=true))
+	bool bClampToScreen = false;
+	UPROPERTY()
+	bool bAutoRemoveWhenIndicatorComponentIsNull = false;
+
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess=true))
+	int32 Priority = 0;
 };

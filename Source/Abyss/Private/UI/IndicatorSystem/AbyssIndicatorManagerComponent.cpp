@@ -13,7 +13,7 @@ UAbyssIndicatorManagerComponent::UAbyssIndicatorManagerComponent(const FObjectIn
 	bAutoRegister = true;
 }
 
-UAbyssIndicatorManagerComponent* UAbyssIndicatorManagerComponent::GetIndicatorManagerComponent(
+UAbyssIndicatorManagerComponent* UAbyssIndicatorManagerComponent::GetComponent(
 	AController* InController)
 {
 	if(InController)

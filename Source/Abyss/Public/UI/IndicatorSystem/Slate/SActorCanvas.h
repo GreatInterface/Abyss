@@ -1,6 +1,9 @@
 #pragma once
 #include "AsyncMixin.h"
+#include "Blueprint/UserWidgetPool.h"
 
+struct FUserWidgetPool;
+class UAbyssIndicatorManagerComponent;
 class UIndicatorDescriptor;
 
 class SActorCanvas : public SPanel, public FAsyncMixin, public FGCObject
@@ -147,6 +150,126 @@ public:
 		
 	SLATE_END_ARGS()
 
+	SActorCanvas()
+		: CanvasChildren(this)
+		, ArrowChildren(this)
+		, AllChildren(this)
+	{
+		AllChildren.AddChildren(CanvasChildren);
+		AllChildren.AddChildren(ArrowChildren);
+	}
+
+	void Construct(const FArguments& InArgs, const FLocalPlayerContext& InCtx, const FSlateBrush* InActorCanvasArrowBrush);
+
 private:
+	EActiveTimerReturnType UpdateCanvas(double InCurrentTime, float InDeltaTime);
+
+	void OnIndicatorAdded(UIndicatorDescriptor* Indicator);
+	void OnIndicatorRemoved(UIndicatorDescriptor* Indicator);
+
+	void SetShowAnyIndicators(bool bIndicators);
 	
+	void AddIndicatorForEntry(UIndicatorDescriptor* Indicator);
+	void RemoveIndicatorForEntry(UIndicatorDescriptor* Indicator);
+	
+	void UpdateActiveTimer();
+
+	using FScopeWidgetSlotArguments = TPanelChildren<FSlot>::FScopedWidgetSlotArguments;
+	FScopeWidgetSlotArguments AddActorSlot(UIndicatorDescriptor* Indicator);
+	int32 RemoveActorSlot(const TSharedRef<SWidget>& SlotWidget);
+
+private:
+	TArray<TObjectPtr<UIndicatorDescriptor>> AllIndicators;
+	TArray<UIndicatorDescriptor*> InactiveIndicator;
+
+	FLocalPlayerContext LocalPlayerContext;
+	TWeakObjectPtr<UAbyssIndicatorManagerComponent> IndicatorCompPtr;
+
+	TPanelChildren<FSlot> CanvasChildren;
+	mutable TPanelChildren<FArrowSlot> ArrowChildren;
+	FCombinedChildren AllChildren;
+
+	FUserWidgetPool IndicatorPool;
+
+	const FSlateBrush* ActorCanvasArrowBrush = nullptr;
+
+	mutable int32 NextArrowIndex = INDEX_NONE;
+	mutable int32 ArrowIndexLastUpdate = 0;
+
+	bool bDrawElementsInOrder = false;
+
+	bool bShowAnyIndicators = false;
+
+	mutable TOptional<FGeometry> OptionalPaintGeometry;
+
+	TSharedPtr<FActiveTimerHandle> TickHandle;
+};
+
+
+class SActorCanvasArrowWidget : public SLeafWidget
+{
+	SLATE_BEGIN_ARGS(SActorCanvasArrowWidget)
+		{}
+		
+	SLATE_END_ARGS()
+
+	SActorCanvasArrowWidget()
+		: Rotation(0.f)
+		, Arrow(nullptr)
+	{}
+
+	void Construct(const FArguments& InArgs, const FSlateBrush* ActorCanvasArrowBrush)
+	{
+		Arrow = ActorCanvasArrowBrush;
+		SetCanTick(false);
+	}
+
+	virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect,
+	                      FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle,
+	                      bool bParentEnabled) const override
+	{
+		int32 MaxLayerId = LayerId;
+
+		if (Arrow)
+		{
+			const bool bIsEnabled = ShouldBeEnabled(bParentEnabled);
+			const ESlateDrawEffect DrawEffect = bIsEnabled ? ESlateDrawEffect::None : ESlateDrawEffect::DisabledEffect;
+			const FColor FinalColorAndOpacity = (InWidgetStyle.GetColorAndOpacityTint() * Arrow->GetTint(InWidgetStyle)).ToFColor(true);
+
+			FSlateDrawElement::MakeRotatedBox(
+				OutDrawElements,
+				MaxLayerId++,
+				AllottedGeometry.ToPaintGeometry(Arrow->ImageSize, FSlateLayoutTransform()),
+				Arrow,
+				DrawEffect,
+				FMath::DegreesToRadians(GetRotation()),
+				TOptional<FVector2D>(),
+				FSlateDrawElement::RelativeToElement,
+				FinalColorAndOpacity
+				);
+		}
+
+		return MaxLayerId;
+	}
+
+	float GetRotation() const { return Rotation; }
+	void SetRotation(float InRotation)
+	{
+		Rotation = FMath::Fmod(InRotation, 360.f);
+	}
+
+	virtual FVector2D ComputeDesiredSize(float LayoutScaleMultiplier) const override
+	{
+		if (Arrow)
+		{
+			return Arrow->ImageSize;
+		}
+
+		return FVector2D::ZeroVector;
+	}
+	
+private:
+	float Rotation;
+
+	const FSlateBrush* Arrow;
 };
