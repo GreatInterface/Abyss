@@ -9,11 +9,25 @@
 class UIndicatorDescriptor;
 class UAbyssIndicatorManagerComponent;
 
-struct FIndicatorProjection
+UENUM(BlueprintType)
+enum class EActorCanvasProjectionMode : uint8
 {
-	bool Project(const UIndicatorDescriptor& IndicatorDescriptor, const FSceneViewProjectionData& InProjectionData, const FVector2f& ScreenSize, FVector& ScreenPositionWithDepth);
+	ComponentPoint,
+	ComponentBoundingBox,
+	ComponentScreenBoundingBox,
+	ActorBoundingBox,
+	ActorScreenBoundingBox
 };
 
+
+struct FIndicatorProjection
+{
+	bool Project(const UIndicatorDescriptor& IndicatorDescriptor, const FSceneViewProjectionData& InProjectionData, const FVector2f& ScreenSize, FVector& OutScreenPositionWithDepth);
+};
+
+/** -----------------------------------------------------------------------------------------------------------
+	
+ -----------------------------------------------------------------------------------------------------------*/
 UCLASS()
 class ABYSS_API UIndicatorDescriptor : public UObject
 {
@@ -21,6 +35,7 @@ class ABYSS_API UIndicatorDescriptor : public UObject
 
 	UIndicatorDescriptor() = default;
 
+	friend struct FIndicatorProjection;
 public:
 
 	UFUNCTION(BlueprintCallable)
@@ -32,6 +47,11 @@ public:
 	USceneComponent* GetSceneComponent() const { return Component; }
 	UFUNCTION(BlueprintCallable)
 	void SetSceneComponent(USceneComponent* InComponent){ Component = InComponent; }
+
+	UFUNCTION(BlueprintCallable)
+	FName GetComponentSocketName() const { return ComponentSocketName; }
+	UFUNCTION(BlueprintCallable)
+	void SetComponentSocketName(FName SocketName) { ComponentSocketName = SocketName; }
 
 	UFUNCTION(BlueprintCallable)
 	TSoftClassPtr<UUserWidget> GetIndicatorClass() const { return IndicatorWidgetClass; }
@@ -118,4 +138,14 @@ private:
 
 	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess=true))
 	int32 Priority = 0;
+
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess=true))
+	EActorCanvasProjectionMode ProjectionMode = EActorCanvasProjectionMode::ComponentPoint;
+
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess=true))
+	FVector BoundingBoxAnchor = FVector(.5, .5, .5);	
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess=true))
+	FVector2D ScreenSpaceOffset = FVector2D::ZeroVector;
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess=true))
+	FVector WorldPositionOffset = FVector::ZeroVector;
 };

@@ -25,7 +25,9 @@ public class Abyss : ModuleRules
 			"CommonUser",
 			"UMG",
 			"NetCore",
-			"AsyncMixin"
+			"AsyncMixin",
+			"Slate",
+			"SlateCore"
 			});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });

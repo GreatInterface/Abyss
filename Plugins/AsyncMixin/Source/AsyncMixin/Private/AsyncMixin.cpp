@@ -6,6 +6,7 @@
 
 DEFINE_LOG_CATEGORY_STATIC(LogAsyncMixin, Log, All);
 
+TMap<FAsyncMixin*, TSharedRef<FAsyncMixin::FLoadingState>> FAsyncMixin::Loading;
 
 FAsyncMixin::FAsyncMixin()
 {

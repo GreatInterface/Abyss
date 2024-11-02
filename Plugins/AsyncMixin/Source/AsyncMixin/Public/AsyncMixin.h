@@ -227,11 +227,11 @@ DECLARE_DELEGATE_RetVal(EAsyncConditionResult, FAsyncConditionDelegate);
 class FAsyncCondition : public TSharedFromThis<FAsyncCondition>
 {
 public:
-	FAsyncCondition(const FAsyncConditionDelegate&& Condition)
-		: UserCondition(MoveTemp(Condition))
+	FAsyncCondition(const FAsyncConditionDelegate& Condition)
+		: UserCondition(Condition)
 	{};
 
-	FAsyncCondition(const TFunction<EAsyncConditionResult()>&& Condition)
+	FAsyncCondition(TFunction<EAsyncConditionResult()>&& Condition)
 		: UserCondition(FAsyncConditionDelegate::CreateLambda([UserFunc = MoveTemp(Condition)]() mutable
 		{
 			return UserFunc();

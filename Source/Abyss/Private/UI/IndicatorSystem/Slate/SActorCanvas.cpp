@@ -1,6 +1,6 @@
 #include "UI/IndicatorSystem/Slate/SActorCanvas.h"
 #include "UI/IndicatorSystem/AbyssIndicatorManagerComponent.h"
-#include "UI/IndicatorSystem/IndicatorWidgetInterface.h"
+#include "UI/IndicatorSystem/Interface/IndicatorWidgetInterface.h"
 
 void SActorCanvas::Construct(const FArguments& InArgs, const FLocalPlayerContext& InCtx,
                              const FSlateBrush* InActorCanvasArrowBrush)

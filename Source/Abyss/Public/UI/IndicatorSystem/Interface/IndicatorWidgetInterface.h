@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "IndicatorDescriptor.h"
+#include "../IndicatorDescriptor.h"
 
 #include "IndicatorWidgetInterface.generated.h"
 
