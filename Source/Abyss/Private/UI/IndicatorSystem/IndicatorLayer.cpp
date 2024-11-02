@@ -2,7 +2,6 @@
 
 
 #include "UI/IndicatorSystem/IndicatorLayer.h"
-
 #include "UI/IndicatorSystem/Slate/SActorCanvas.h"
 
 UIndicatorLayer::UIndicatorLayer(const FObjectInitializer& ObjectInitializer)

@@ -133,6 +133,8 @@ private:
 	bool bVisible = true;
 	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess=true))
 	bool bClampToScreen = false;
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess=true))
+	bool bShowClampToScreenArrow = false;
 	UPROPERTY()
 	bool bAutoRemoveWhenIndicatorComponentIsNull = false;
 
@@ -141,6 +143,10 @@ private:
 
 	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess=true))
 	EActorCanvasProjectionMode ProjectionMode = EActorCanvasProjectionMode::ComponentPoint;
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess=true))
+	TEnumAsByte<EHorizontalAlignment> HAlignment = HAlign_Center;
+	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess=true))
+	TEnumAsByte<EVerticalAlignment> VAlignment = VAlign_Center;
 
 	UPROPERTY(BlueprintReadWrite, meta=(AllowPrivateAccess=true))
 	FVector BoundingBoxAnchor = FVector(.5, .5, .5);	

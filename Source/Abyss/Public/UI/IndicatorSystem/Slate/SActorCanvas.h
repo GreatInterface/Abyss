@@ -161,6 +161,16 @@ public:
 
 	void Construct(const FArguments& InArgs, const FLocalPlayerContext& InCtx, const FSlateBrush* InActorCanvasArrowBrush);
 
+	//~SWidget
+	virtual void OnArrangeChildren(const FGeometry& AllottedGeometry, FArrangedChildren& ArrangedChildren) const override;
+	virtual FVector2D ComputeDesiredSize(float) const override { return FVector2D::ZeroVector; }
+	virtual FChildren* GetChildren() override { return &AllChildren; }
+	virtual int32 OnPaint(const FPaintArgs& Args, const FGeometry& AllottedGeometry, const FSlateRect& MyCullingRect, FSlateWindowElementList& OutDrawElements, int32 LayerId, const FWidgetStyle& InWidgetStyle, bool bParentEnabled) const override;
+	//~End of SWidget
+
+	virtual FString GetReferencerName() const override;
+	virtual void AddReferencedObjects(FReferenceCollector& Collector) override;
+
 private:
 	EActiveTimerReturnType UpdateCanvas(double InCurrentTime, float InDeltaTime);
 
@@ -177,6 +187,12 @@ private:
 	using FScopeWidgetSlotArguments = TPanelChildren<FSlot>::FScopedWidgetSlotArguments;
 	FScopeWidgetSlotArguments AddActorSlot(UIndicatorDescriptor* Indicator);
 	int32 RemoveActorSlot(const TSharedRef<SWidget>& SlotWidget);
+
+	void GetOffsetAndSize(const UIndicatorDescriptor* Indicator,
+	FVector2D& OutSize, 
+	FVector2D& OutOffset,
+	FVector2D& OutPaddingMin,
+	FVector2D& OutPaddingMax) const;
 
 private:
 	TArray<TObjectPtr<UIndicatorDescriptor>> AllIndicators;
