@@ -73,7 +73,7 @@ public:
 
 	void TakeFromAbilitySystem(UAbyssAbilitySystemComponent* AbyssASC);
 
-private:
+protected:
 
 	UPROPERTY()
 	TArray<FGameplayAbilitySpecHandle> AbilitySpecHandles;

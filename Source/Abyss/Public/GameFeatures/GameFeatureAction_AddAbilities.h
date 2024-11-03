@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFeatureAction_WorldActionBase.h"
+#include "AbilitySystem/AbyssAbilitySet.h"
 #include "GameFeatureAction_AddAbilities.generated.h"
 
 struct FComponentRequestHandle;
-struct FAbyssAbilitySet_GrantedHandles;
 struct FGameplayAbilitySpecHandle;
 class  UAbyssAbilitySet;
 class  UAttributeSet;
