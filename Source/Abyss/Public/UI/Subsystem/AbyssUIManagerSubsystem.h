@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameUIManagerSubsystem.h"
+#include "GameUIManagerSubsystem.h"	
 #include "AbyssUIManagerSubsystem.generated.h"
 
 /**
@@ -16,7 +16,7 @@ class ABYSS_API UAbyssUIManagerSubsystem : public UGameUIManagerSubsystem
 
 public:
 
-	UAbyssUIManagerSubsystem(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+	UAbyssUIManagerSubsystem();
 
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	virtual void Deinitialize() override;

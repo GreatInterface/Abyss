@@ -9,8 +9,7 @@
 #include "GameFramework/HUD.h"
 
 
-UAbyssUIManagerSubsystem::UAbyssUIManagerSubsystem(const FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
+UAbyssUIManagerSubsystem::UAbyssUIManagerSubsystem()
 {
 }
 
