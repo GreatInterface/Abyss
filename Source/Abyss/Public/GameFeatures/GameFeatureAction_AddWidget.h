@@ -5,10 +5,10 @@
 #include "CoreMinimal.h"
 #include "GameFeatureAction_WorldActionBase.h"
 #include "GameplayTagContainer.h"
-#include "UI/Extension/UIExtensionType.h"
+#include "Components/GameFrameworkComponentManager.h"
+#include "UI/Extension/UIExtensionSubsystem.h"
 #include "GameFeatureAction_AddWidget.generated.h"
 
-struct FComponentRequestHandle;
 class UCommonActivatableWidget;
 
 USTRUCT()
