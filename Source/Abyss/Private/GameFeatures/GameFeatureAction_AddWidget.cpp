@@ -84,7 +84,7 @@ void UGameFeatureAction_AddWidget::AddWidget(AActor* Actor, FPerContextData& Act
 		for (const FAbyssHUDLayoutRequest& Request : Layout)
 		{
 			TSubclassOf<UCommonActivatableWidget> ConcreteWidgetClass = Request.LayoutClass.Get();
-			if (ConcreteWidgetClass)
+			if (!ConcreteWidgetClass)
 			{
 				return;
 			}
