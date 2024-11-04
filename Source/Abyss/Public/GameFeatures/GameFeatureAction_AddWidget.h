@@ -5,8 +5,10 @@
 #include "CoreMinimal.h"
 #include "GameFeatureAction_WorldActionBase.h"
 #include "GameplayTagContainer.h"
+#include "UI/Extension/UIExtensionType.h"
 #include "GameFeatureAction_AddWidget.generated.h"
 
+struct FComponentRequestHandle;
 class UCommonActivatableWidget;
 
 USTRUCT()
@@ -51,9 +53,30 @@ public:
 	UPROPERTY(EditAnywhere, Category=UI, meta=(TitleProperty="{SlotID} -> {WidgetClass}"))
 	TArray<FAbyssHUDElementEntry> Widgets;
 
+
 private:
 	struct FPerActorData
 	{
 		TArray<TWeakObjectPtr<UCommonActivatableWidget>> LayoutsAdded;
+		TArray<FUIExtensionHandle> ExtensionHandles;
 	};
+
+	struct FPerContextData
+	{
+		TArray<TSharedPtr<FComponentRequestHandle>> ComponentRequests;
+		TMap<FObjectKey, FPerActorData> ActorData; 
+	};
+
+private:
+
+	virtual void AddToWorld(const FWorldContext& WorldContext, const FGameFeatureStateChangeContext& ChangeContext) override;
+
+	void Reset(FPerContextData& ActiveData);	
+
+	void HandleActorExtension(AActor* Actor, FName EventName, FGameFeatureStateChangeContext ChangeContext);
+
+	void AddWidget(AActor* Actor, FPerContextData& ActiveData);
+	void RemoveWidget(AActor* Actor, FPerContextData& ActiveData);
+
+	TMap<FGameFeatureStateChangeContext, FPerContextData> ContextData;
 };

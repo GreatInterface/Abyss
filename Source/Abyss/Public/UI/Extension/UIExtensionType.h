@@ -77,7 +77,7 @@ private:
 		: DataPtr(InDataPtr)
 		, ExtensionSource(InSubsystem)
 	{}
-	
+
 private:
 
 	TSharedPtr<FUIExtension> DataPtr;
@@ -131,29 +131,7 @@ struct FUIExtensionPoint : TSharedFromThis<FUIExtensionPoint>
 
 	FGameplayTag ExtensionPointTag;
 
-	bool DoesExtensionPassContract(const FUIExtension* Extension)const 
-	{
-		if (UObject* DataPtr = Extension->Data)
-		{
-			const bool bMatchesContext =
-				(ContextObject.IsExplicitlyNull() && Extension->ContextObject.IsExplicitlyNull()) ||
-				(ContextObject == Extension->ContextObject);
-
-			if (!bMatchesContext)
-				return false;
-
-			const UClass* DataClass = DataPtr->IsA(UClass::StaticClass()) ? Cast<UClass>(DataPtr) : DataPtr->GetClass();
-			for (const UClass* AllowDataClass : AllowedDataClasses)
-			{
-				if (DataClass->IsChildOf(AllowDataClass) || DataClass->ImplementsInterface(AllowDataClass))
-				{
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
+	bool DoesExtensionPassContract(const FUIExtension* Extension)const;
 };
 
 USTRUCT(BlueprintType)
