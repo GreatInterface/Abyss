@@ -69,16 +69,10 @@ bool UAbyssHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Man
 
 	APawn* Pawn = GetPawn<APawn>();
 	check(Pawn);
-
-	// 检查并记录PlayerState
-	AAbyssPlayerState* PlayerState = GetPlayerState<AAbyssPlayerState>();
-	if (!PlayerState)
+	
+	if (GetPlayerState<AAbyssPlayerState>())
 	{
-		UE_LOG(LogAbyss, Error, TEXT("PlayerState is null in BeginPlay"));
-	}
-	else
-	{
-		UE_LOG(LogAbyss, Error, TEXT("PlayerState"));
+		UE_LOG(LogAbyss, Display, TEXT("PlayerState"));
 	}
 	
 	if(!CurrentState.IsValid() && DesiredState == AbyssGameplayTags::InitState_Spawned)
@@ -118,7 +112,7 @@ bool UAbyssHeroComponent::CanChangeInitState(UGameFrameworkComponentManager* Man
 void UAbyssHeroComponent::HandleChangeInitState(UGameFrameworkComponentManager* Manager, FGameplayTag CurrentState,
 	FGameplayTag DesiredState)
 {
-	UE_LOG(LogAbyss, Error, TEXT(" Current[%s],DesiredState[%s]"),*CurrentState.ToString(),*DesiredState.ToString());
+	UE_LOG(LogAbyss, Log, TEXT(" Current[%s],DesiredState[%s]"),*CurrentState.ToString(),*DesiredState.ToString());
 	
 	if(CurrentState == AbyssGameplayTags::InitState_DataAvailable && DesiredState == AbyssGameplayTags::InitState_DataInitialized)
 	{
