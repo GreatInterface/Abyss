@@ -14,4 +14,8 @@ class ABYSS_API UAbyssLocalPlayer : public UCommonLocalPlayer
 	GENERATED_BODY()
 
 	UAbyssLocalPlayer();
+
+	//~ULocalPlayer
+	virtual bool SpawnPlayActor(const FString& URL, FString& OutError, UWorld* InWorld) override;
+	
 };

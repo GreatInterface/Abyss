@@ -31,6 +31,7 @@ public:
 	//~ End of AController interface
 
 	//~ APlayerController interface
+	virtual void SetPlayer(UPlayer* InPlayer) override;
 	virtual void PreProcessInput(const float DeltaTime, const bool bGamePaused) override;
 	virtual void PostProcessInput(const float DeltaTime, const bool bGamePaused) override;
 	//~ End of APlayerController interface

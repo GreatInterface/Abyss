@@ -5,10 +5,16 @@
 
 #include "Abyss/AbyssGameplayTags.h"
 #include "Components/GameFrameworkComponentManager.h"
+#include "Player/AbyssPlayerController.h"
 
 UAbyssGameInstance::UAbyssGameInstance(const FObjectInitializer& ObjectInitializer)
 	:Super(ObjectInitializer)
 {
+}
+
+AAbyssPlayerController* UAbyssGameInstance::GetPrimaryPlayerController() const
+{
+	return Cast<AAbyssPlayerController>(Super::GetPrimaryPlayerController(false));
 }
 
 void UAbyssGameInstance::Init()

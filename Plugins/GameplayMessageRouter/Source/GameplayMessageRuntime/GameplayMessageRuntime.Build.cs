@@ -12,7 +12,8 @@ public class GameplayMessageRuntime : ModuleRules
 			{
 				"Core",
 				"Engine",
-				"GameplayTags"
+				"GameplayTags",
+				"Kismet"
 			});
 		
 		PrivateDependencyModuleNames.AddRange(

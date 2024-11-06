@@ -28,7 +28,7 @@ struct FIndicatorProjection
 /** -----------------------------------------------------------------------------------------------------------
 	
  -----------------------------------------------------------------------------------------------------------*/
-UCLASS()
+UCLASS(BlueprintType)
 class ABYSS_API UIndicatorDescriptor : public UObject
 {
 	GENERATED_BODY()

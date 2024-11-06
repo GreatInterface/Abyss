@@ -39,7 +39,8 @@ public class AbyssCoreRuntime : ModuleRules
 				"CoreUObject",
 				"Engine",
 				"Slate",
-				"SlateCore",
+				"SlateCore", 
+				"GameplayMessageRuntime",
 			}
 			);
 		

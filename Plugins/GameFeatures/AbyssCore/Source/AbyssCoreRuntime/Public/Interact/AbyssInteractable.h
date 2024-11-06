@@ -7,6 +7,8 @@
 #include "Interact/InteractableTarget.h"
 #include "AbyssInteractable.generated.h"
 
+struct FAbyssInteractMessage;
+
 UCLASS(Abstract, Blueprintable)
 class ABYSSCORERUNTIME_API AAbyssInteractable : public AActor, public IInteractableTarget
 {
@@ -21,7 +23,10 @@ public:
 	/** 定制EventData */
 	virtual void CustomizeInteractionEventData(const FGameplayTag& InteractionEventTag, FGameplayEventData& InOutEventData) override;
 
+	virtual void BroadcastMessageForInteractableTargets(const TArray<TObjectPtr<AAbyssInteractable>>& InteractableTargets,
+	                                                    FGameplayTag Channel, FAbyssInteractMessage& MessageStruct);
+
 protected:
-	UPROPERTY(EditAnywhere, Category="Abyss|Interact")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Abyss|Interact")
 	FInteractionOption InteractOption;
 };

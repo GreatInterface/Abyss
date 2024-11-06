@@ -6,3 +6,8 @@
 UAbyssLocalPlayer::UAbyssLocalPlayer()
 {
 }
+
+bool UAbyssLocalPlayer::SpawnPlayActor(const FString& URL, FString& OutError, UWorld* InWorld)
+{
+	return Super::SpawnPlayActor(URL, OutError, InWorld);
+}

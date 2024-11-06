@@ -26,6 +26,11 @@ void AAbyssPlayerController::InitPlayerState()
 	Super::InitPlayerState();
 }
 
+void AAbyssPlayerController::SetPlayer(UPlayer* InPlayer)
+{
+	Super::SetPlayer(InPlayer);
+}
+
 void AAbyssPlayerController::PreProcessInput(const float DeltaTime, const bool bGamePaused)
 {
 	Super::PreProcessInput(DeltaTime, bGamePaused);

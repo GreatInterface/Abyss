@@ -8,7 +8,7 @@ class UAbilitySystemComponent;
 class UGameplayAbility;
 class IInteractableTarget;
 
-USTRUCT(BlueprintType)
+USTRUCT(BlueprintType, Blueprintable)
 struct FInteractionOption
 {
 	GENERATED_BODY()

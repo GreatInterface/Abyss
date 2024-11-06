@@ -23,7 +23,8 @@ UCLASS()
 class GAMEPLAYMESSAGERUNTIME_API UGameplayMessageSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
-
+public:
+	friend class UAsyncAction_ListenForGameplayMessage;
 public:
 
 	static UGameplayMessageSubsystem& Get(const UObject* WorldContextObject);

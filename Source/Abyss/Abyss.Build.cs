@@ -28,7 +28,9 @@ public class Abyss : ModuleRules
 			"NetCore",
 			"AsyncMixin",
 			"Slate",
-			"SlateCore"
+			"SlateCore", 
+			"AbyssCoreRuntime",
+			"GameplayMessageRuntime"
 			});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
