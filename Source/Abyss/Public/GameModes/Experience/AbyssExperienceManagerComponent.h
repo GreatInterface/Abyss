@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/GameStateComponent.h"
+#include "CommonLoadingScreen/Public/LoadingProcessInterface.h"
 #include "AbyssExperienceManagerComponent.generated.h"
 
 
@@ -25,7 +26,7 @@ enum class EAbyssExperienceLoadState
 };
 
 UCLASS()
-class ABYSS_API UAbyssExperienceManagerComponent final: public UGameStateComponent
+class ABYSS_API UAbyssExperienceManagerComponent final: public UGameStateComponent, public ILoadingProcessInterface
 {
 	GENERATED_BODY()
 
@@ -34,6 +35,8 @@ public:
 	UAbyssExperienceManagerComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+	virtual bool ShouldShowLoadingScreen(FString& OutReason) const override;
 	
 	//Experience Load 管线第一步
 	//@See StartExperienceLoad

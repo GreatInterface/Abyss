@@ -264,6 +264,17 @@ void UAbyssExperienceManagerComponent::EndPlay(const EEndPlayReason::Type EndPla
 	}
 }
 
+bool UAbyssExperienceManagerComponent::ShouldShowLoadingScreen(FString& OutReason) const
+{
+	if (LoadState != EAbyssExperienceLoadState::Loaded)
+	{
+		OutReason = TEXT("Experience still Loading");
+		return true;
+	}
+
+	return false;
+}
+
 void UAbyssExperienceManagerComponent::OnActionDeactivationCompleted()
 {
 	check(IsInGameThread());
