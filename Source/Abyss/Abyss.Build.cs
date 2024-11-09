@@ -30,7 +30,8 @@ public class Abyss : ModuleRules
 			"Slate",
 			"SlateCore", 
 			"AbyssCoreRuntime",
-			"GameplayMessageRuntime"
+			"GameplayMessageRuntime",
+			"PreLoadScreen"
 			});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });

@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "NativeGameplayTags.h"
+#include "../InteractableTarget.h"
 #include "AbyssInteractMessageType.generated.h"
 
 

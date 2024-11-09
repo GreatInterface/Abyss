@@ -20,37 +20,3 @@ void AAbyssInteractable::CustomizeInteractionEventData(const FGameplayTag& Inter
 	FGameplayEventData& InOutEventData)
 {
 }
-
-void AAbyssInteractable::BroadcastMessageForInteractableTargets(
-	const TArray<TObjectPtr<AAbyssInteractable>>& InteractableTargets, FGameplayTag Channel,
-	FAbyssInteractMessage& MessageStruct)
-{
-	if (InteractableTargets.IsEmpty())
-	{
-		return;
-	}
-
-	TArray<TScriptInterface<IInteractableTarget>> Interfaces;
-	for (AAbyssInteractable* Interactable : InteractableTargets)
-	{
-		TScriptInterface<AAbyssInteractable> Interface(Interactable);
-		if (Interface)
-		{
-			Interfaces.Add(Interface);
-		}
-	}
-
-	MessageStruct.Targets = Interfaces;
-	
-	if (UWorld* World = GetWorld())
-	{
-		if (UGameInstance* GameInstance = World->GetGameInstance())
-		{
-			if (UGameplayMessageSubsystem* MessageSubsystem = GameInstance->GetSubsystem<UGameplayMessageSubsystem>())
-			{
-				MessageSubsystem->BroadcastMessage(Channel, MessageStruct);
-			}
-		}		
-	}
-}
-

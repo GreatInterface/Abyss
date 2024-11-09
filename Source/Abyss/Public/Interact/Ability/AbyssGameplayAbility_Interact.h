@@ -3,8 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "NativeGameplayTags.h"
 #include "AbilitySystem/Ability/AbyssGameplayAbility.h"
 #include "AbyssGameplayAbility_Interact.generated.h"
+
+UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_Ability_Interaction_Activate);
 
 class UIndicatorDescriptor;
 struct FInteractionOption;

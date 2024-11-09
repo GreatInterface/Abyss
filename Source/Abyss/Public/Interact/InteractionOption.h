@@ -4,12 +4,13 @@
 #include "Abilities/GameplayAbility.h"
 #include "InteractionOption.generated.h"
 
+class AAbyssInteractable;
 class UAbilitySystemComponent;
 class UGameplayAbility;
 class IInteractableTarget;
 
 USTRUCT(BlueprintType, Blueprintable)
-struct FInteractionOption
+struct ABYSS_API FInteractionOption
 {
 	GENERATED_BODY()
 public:
@@ -44,6 +45,19 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSoftClassPtr<UUserWidget> InteractionWidgetClass;
 
+	/*-----------------------------------------------------------------------------------------
+			可交互Object之间的传递信息
+	----------------------------------------------------------------------------------------*/
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Abyss|Interact")
+	TArray<TSoftObjectPtr<AAbyssInteractable>> BroadcastTargets;
+
+	UPROPERTY(BlueprintReadWrite, Category="Abyss|Interact")
+	TScriptInterface<IInteractableTarget> Parent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category="Abyss|Interact")
+	FGameplayTag GameplayCueTag = FGameplayTag();
+	
 public:
 
 	bool operator==(const FInteractionOption& Other) const noexcept

@@ -9,7 +9,7 @@
 
 struct FAbyssInteractMessage;
 
-UCLASS(Abstract, Blueprintable)
+UCLASS(Abstract, Blueprintable, BlueprintType)
 class ABYSSCORERUNTIME_API AAbyssInteractable : public AActor, public IInteractableTarget
 {
 	GENERATED_BODY()
@@ -22,9 +22,6 @@ public:
 	virtual void GatherInteractionOptions(const FInteractionQuery& InteractionQuery, FInteractionOptionBuilder& OptionBuilder) override;
 	/** 定制EventData */
 	virtual void CustomizeInteractionEventData(const FGameplayTag& InteractionEventTag, FGameplayEventData& InOutEventData) override;
-
-	virtual void BroadcastMessageForInteractableTargets(const TArray<TObjectPtr<AAbyssInteractable>>& InteractableTargets,
-	                                                    FGameplayTag Channel, FAbyssInteractMessage& MessageStruct);
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Abyss|Interact")

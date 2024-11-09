@@ -11,7 +11,7 @@
 #include "UI/IndicatorSystem/AbyssIndicatorManagerComponent.h"
 #include "UI/IndicatorSystem/IndicatorDescriptor.h"
 
-UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_Ability_Interaction_Activate, "Ability.Interaction.Activate")
+UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Interaction_Activate, "Ability.Interaction.Activate")
 /** Declare in AbyssInteractDurationMessage.h */
 UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_INTENACTION_DURATION_MESSAGE, "Ability.Interaction.Duration.Message")
 
@@ -103,7 +103,7 @@ void UAbyssGameplayAbility_Interact::TriggerInteraction()
 		AActor* TargetActor = const_cast<AActor*>(ToRawPtr(Payload.Target));
 		
 		FGameplayAbilityActorInfo ActorInfo;
-		ActorInfo.InitFromActor(InteractableActor, TargetActor, Option.TargetASC);
+ 		ActorInfo.InitFromActor(InteractableActor, TargetActor, Option.TargetASC);
 
 		//将通过事件标记（TAG_Ability_Interaction_Activate）来触发互动能力。
 		//在这个步骤中，能力系统通过传递事件数据和初始化的演员信息来激活特定的能力，从而响应玩家的交互行为。

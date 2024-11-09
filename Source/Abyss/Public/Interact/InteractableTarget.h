@@ -12,7 +12,7 @@ struct FInteractionOption;
 class IInteractableTarget;
 
 // This class does not need to be modified.
-UINTERFACE(MinimalAPI, meta=(CannotImplementInterfaceInBlueprint))
+UINTERFACE(MinimalAPI, Blueprintable)
 class UInteractableTarget : public UInterface
 {
 	GENERATED_BODY()
@@ -31,4 +31,7 @@ public:
 	virtual void GatherInteractionOptions(const FInteractionQuery& InteractionQuery, FInteractionOptionBuilder& OptionBuilder) = 0;
 
 	virtual void CustomizeInteractionEventData(const FGameplayTag& InteractionEventTag, FGameplayEventData& InOutEventData){}
+
+	UFUNCTION(BlueprintCallable, BlueprintNativeEvent)
+	void TriggerGameplayCueEvent();
 };
