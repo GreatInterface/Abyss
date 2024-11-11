@@ -2,26 +2,55 @@
 
 #pragma once
 
+#include <LoadingProcessInterface.h>
 #include "CoreMinimal.h"
+#include "CommonUserSubsystem.h"
+#include "ControlFlowNode.h"
 #include "Components/GameStateComponent.h"
+#include "GameModes/Experience/AbyssExperienceDefinition.h"
 #include "AbyssFrontendStateComponent.generated.h"
 
 
-UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
-class ABYSS_API UAbyssFrontendStateComponent : public UGameStateComponent
+class UCommonActivatableWidget;
+
+UCLASS(Abstract)
+class ABYSS_API UAbyssFrontendStateComponent : public UGameStateComponent, public ILoadingProcessInterface
 {
 	GENERATED_BODY()
 
 public:
-	// Sets default values for this component's properties
-	UAbyssFrontendStateComponent();
+	UAbyssFrontendStateComponent(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
 
-protected:
-	// Called when the game starts
+	//~UActorComponent interface
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	//~End of UActorComponent interface
 
-public:
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType,
-	                           FActorComponentTickFunction* ThisTickFunction) override;
+	//~ILoadingProcessInterface interface
+	virtual bool ShouldShowLoadingScreen(FString& OutReason) const override;
+	//~End of ILoadingProcessInterface interface
+
+private:
+	void OnExperienceLoad(const UAbyssExperienceDefinition* InExperience);
+
+	void FlowStep_WaitForUserInitialization(FControlFlowNodeRef SubFlow);
+	void FlowStep_TryShowPressStartScreen(FControlFlowNodeRef SubFlow);
+	void FlowStep_TryJoinRequestedSession(FControlFlowNodeRef SubFlow);
+	void FlowStep_TryShowMainScreen(FControlFlowNodeRef SubFlow);
+
+	UFUNCTION()
+	void OnUserInitialized(const UCommonUserInfo* UserInfo, bool bSuccess, FText Error, ECommonUserPrivilege RequestedPrivilege, ECommonUserOnlineContext OnlineContext);
+	
+	
+	TSharedPtr<FControlFlow> FrontEndFlow;
+
+	FControlFlowNodePtr InProgressPressStartScreen;
+
+	bool bShouldShowLoadingScreen = true;
+	
+	UPROPERTY(EditAnywhere, Category=UI)
+	TSoftClassPtr<UCommonActivatableWidget> PressStartScreenClass;
+
+	UPROPERTY(EditAnywhere, Category=UI)
+	TSoftClassPtr<UCommonActivatableWidget> MainScreenClass;
 };

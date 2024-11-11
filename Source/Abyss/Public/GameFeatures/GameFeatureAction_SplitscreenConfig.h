@@ -26,5 +26,5 @@ public:
 private:
 	TArray<FObjectKey> LocalDisableVotes;
 
-	static TMap<FObjectKey, int32> GlobalDisableVotes; 
+	inline static TMap<FObjectKey, int32> GlobalDisableVotes = TMap<FObjectKey, int32>(); 
 };

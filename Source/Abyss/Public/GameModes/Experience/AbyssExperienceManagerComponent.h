@@ -43,6 +43,8 @@ public:
 	void SetCurrentExperience(FPrimaryAssetId ExperienceId);
 
 	void CallOrRegister_OnExperienceLoaded(FOnAbyssExperienceLoaded::FDelegate&& Delegate);
+	void CallOrRegister_OnExperienceLoaded_HighPriority(FOnAbyssExperienceLoaded::FDelegate&& Delegate);
+
 
 	const UAbyssExperienceDefinition* GetCurrentExperienceChecked() const;
 	
@@ -76,7 +78,7 @@ private:
 	 * Delegate called when the experience has finished loading just before others
 	 */
 	FOnAbyssExperienceLoaded OnExperienceLoaded_HighPriority;
-
+	
 	/** Delegate called when the experience has finished loading */
 	FOnAbyssExperienceLoaded OnExperienceLoaded;
 

@@ -3,6 +3,8 @@
 
 #include "GameFeatures/GameFeatureAction_SplitscreenConfig.h"
 
+#define LOCTEXT_NAMESPACE "AbyssGameFeatures"
+
 void UGameFeatureAction_SplitscreenConfig::OnGameFeatureDeactivating(FGameFeatureDeactivatingContext& Context)
 {
 	Super::OnGameFeatureDeactivating(Context);
@@ -62,3 +64,5 @@ void UGameFeatureAction_SplitscreenConfig::AddToWorld(const FWorldContext& World
 		}
 	}
 }
+
+#undef LOCTEXT_NAMESPACE

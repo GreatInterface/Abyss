@@ -307,6 +307,19 @@ void UAbyssExperienceManagerComponent::CallOrRegister_OnExperienceLoaded(FOnAbys
 	}
 }
 
+void UAbyssExperienceManagerComponent::CallOrRegister_OnExperienceLoaded_HighPriority(
+	FOnAbyssExperienceLoaded::FDelegate&& Delegate)
+{
+	if (IsExperienceLoaded())
+	{
+		Delegate.Execute(CurrentExperience);
+	}
+	else
+	{
+		OnExperienceLoaded_HighPriority.Add(MoveTemp(Delegate));
+	}
+}
+
 const UAbyssExperienceDefinition* UAbyssExperienceManagerComponent::GetCurrentExperienceChecked() const
 {
 	check(LoadState == EAbyssExperienceLoadState::Loaded)

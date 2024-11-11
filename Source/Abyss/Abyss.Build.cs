@@ -31,10 +31,11 @@ public class Abyss : ModuleRules
 			"SlateCore", 
 			"AbyssCoreRuntime",
 			"GameplayMessageRuntime",
-			"CommonLoadingScreen",
+			"CommonLoadingScreen", 
+			"ControlFlows",
 			});
 
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
+		PrivateDependencyModuleNames.AddRange(new string[] {"ControlFlows"});
 		
 		PublicDefinitions.Add("SHIPPING_ENABLE_DRAW_DEBUG=1");
 		

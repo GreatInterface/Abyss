@@ -78,6 +78,10 @@
 		{
 			"Name": "AsyncMixin",
 			"Enabled": true
+		},
+		{
+			"Name": "ControlFlows",
+			"Enabled": true
 		}
 	]
 }
