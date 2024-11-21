@@ -116,6 +116,8 @@ void UAbyssFrontendStateComponent::FlowStep_TryShowPressStartScreen(FControlFlow
 	if (UPrimaryGameLayout* RootLayout = UPrimaryGameLayout::GetPrimaryGameLayoutForPrimaryPlayer(this))
 	{
 		constexpr bool bSuspendInputUntilComplete = true;
+		InProgressPressStartScreen = SubFlow;
+		
 		RootLayout->PushWidgetToLayerStackAsync<UCommonActivatableWidget>(FrontendTags::TAG_UI_LAYER_MENU, bSuspendInputUntilComplete, PressStartScreenClass,
 			[this, SubFlow](EAsyncWidgetLayerState State, UCommonActivatableWidget* Screen)
 			{

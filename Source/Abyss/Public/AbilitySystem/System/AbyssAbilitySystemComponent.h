@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemComponent.h"
+#include "AbilitySystem/Ability/AbyssGameplayAbility.h"
 #include "AbyssAbilitySystemComponent.generated.h"
-
 
 class UAbyssAbilityTagRelationshipMapping;
 
@@ -31,6 +31,8 @@ public:
 	void ProcessAbilityInput(float DeltaTime, bool bGamePaused);
 	void ClearAbilityInput();
 
+	bool IsActivationGroupBlocked(EAbyssAbilityActivationGroup Group) const;
+	
 private:
 
 	void TryActivateAbilitiesOnSpawn();
@@ -48,6 +50,7 @@ protected:
 	TArray<FGameplayAbilitySpecHandle> InputReleasedSpecHandles;
 	
 	TArray<FGameplayAbilitySpecHandle> InputHeldSpecHandles;
-	
+
+	int32 ActivationGroupCounts[(int32)EAbyssAbilityActivationGroup::MAX];
 };
 

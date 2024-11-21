@@ -4,12 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include "Task/AbilityTask_WaitForInteractableTargets_SingleLineTrace.h"
 #include "InteractionLibrary.generated.h"
 
 
+class UAbilityTask_WaitForInteractableTargets_SingleLineTrace;
 class IInteractableTarget;
 
-UCLASS()
+UCLASS(meta=(ScriptName="Interaction"))
 class ABYSS_API UInteractionLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()

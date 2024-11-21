@@ -2,9 +2,8 @@
 
 
 #include "Interact/InteractionLibrary.h"
-
+#include "Interact/InteractableTarget.h"
 #include <functional>
-
 #include "Engine/OverlapResult.h"
 
 UInteractionLibrary::UInteractionLibrary()

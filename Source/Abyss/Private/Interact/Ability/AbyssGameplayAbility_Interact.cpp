@@ -3,6 +3,7 @@
 #include "Interact/Ability/AbyssGameplayAbility_Interact.h"
 #include "AbilitySystemComponent.h"
 #include "NativeGameplayTags.h"
+#include "Abyss/AbyssLogChannels.h"
 #include "Interact/InteractableTarget.h"
 #include "Interact/InteractionOption.h"
 #include "Interact/InteractionLibrary.h"
@@ -13,7 +14,7 @@
 
 UE_DEFINE_GAMEPLAY_TAG(TAG_Ability_Interaction_Activate, "Ability.Interaction.Activate")
 /** Declare in AbyssInteractDurationMessage.h */
-UE_DEFINE_GAMEPLAY_TAG_STATIC(TAG_INTENACTION_DURATION_MESSAGE, "Ability.Interaction.Duration.Message")
+UE_DEFINE_GAMEPLAY_TAG(TAG_INTENACTION_DURATION_MESSAGE, "Ability.Interaction.Duration.Message")
 
 UAbyssGameplayAbility_Interact::UAbyssGameplayAbility_Interact(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -34,7 +35,20 @@ void UAbyssGameplayAbility_Interact::ActivateAbility(const FGameplayAbilitySpecH
 	{
 		UAbilityTask_GrantNearbyInteraction* Task = UAbilityTask_GrantNearbyInteraction::GrantAbilitiesForNearbyInteractors(this, InteractionScanRange, InteractionScanRate);
 		Task->ReadyForActivation();
+		MyGrantNearbyInteractionTask = Task;
 	}
+
+	FGameplayAbilitySpec UnequipAbilitySpec(UnequipAbility, 1, INDEX_NONE, this);
+	UnequipAbilitySpecHandle = ASC->GiveAbility(UnequipAbilitySpec);
+}
+
+void UAbyssGameplayAbility_Interact::EndAbility(const FGameplayAbilitySpecHandle Handle,
+	const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo,
+	bool bReplicateEndAbility, bool bWasCancelled)
+{
+	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+
+	GetAbilitySystemComponentFromActorInfo()->ClearAbility(UnequipAbilitySpecHandle);
 }
 
 void UAbyssGameplayAbility_Interact::UpdateInteractions(const TArray<FInteractionOption>& InteractionOptions)
@@ -70,16 +84,30 @@ void UAbyssGameplayAbility_Interact::UpdateInteractions(const TArray<FInteractio
 	CurrentOptions = InteractionOptions;
 }
 
+
+
 void UAbyssGameplayAbility_Interact::TriggerInteraction()
 {
-	if(CurrentOptions.IsEmpty())
+	if (CurrentOptions.IsEmpty() && !EquippedMessage.Equipment)
 	{
+		if (EquippedMessage.State == EAbyssInteractionState::Equip)
+		{
+			UE_LOG(LogAbyss, Error, TEXT("Current Interaction State is Equip, but Equipment is nullptr"));
+		}
+		
 		return;
 	}
 
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
-	if(ASC)
+	if (ASC != nullptr)
 	{
+		// TODO: if CurrentOptions is not Empty, does have chance to Interact Interactable With Equipment?
+		bool bIsHandleEquipmentSuccess = HandleEquipment(ASC);
+		if (bIsHandleEquipmentSuccess || CurrentOptions.IsEmpty())
+		{
+			return;
+		}
+		
 		const FInteractionOption& Option = CurrentOptions[0];
 
 		AActor* Instigator = GetAvatarActorFromActorInfo();
@@ -104,18 +132,54 @@ void UAbyssGameplayAbility_Interact::TriggerInteraction()
 		
 		FGameplayAbilityActorInfo ActorInfo;
  		ActorInfo.InitFromActor(InteractableActor, TargetActor, Option.TargetASC);
-
-		//将通过事件标记（TAG_Ability_Interaction_Activate）来触发互动能力。
-		//在这个步骤中，能力系统通过传递事件数据和初始化的演员信息来激活特定的能力，从而响应玩家的交互行为。
-		//如果交互成功，交互目标将执行与其关联的游戏能力。
-		const bool bSuccess = Option.TargetASC->TriggerAbilityFromGameplayEvent(
-			Option.TargetInteractionAbilitySpecHandle,
-			&ActorInfo,
-			TAG_Ability_Interaction_Activate,
-			&Payload,
-			*Option.TargetASC);
+		
+		HandleCommonInteractable(Option, Payload, ActorInfo);
 	}
 }
 
+bool UAbyssGameplayAbility_Interact::HandleEquipment(UAbilitySystemComponent* ASC)
+{
+	if (EquippedMessage.State == EAbyssInteractionState::Equip && EquippedMessage.Equipment)
+	{
+		FGameplayAbilityActorInfo UnequipActorInfo;
+		UnequipActorInfo.InitFromActor(EquippedMessage.Equipment, EquippedMessage.Equipment, ASC);
+		
+		FGameplayEventData Payload;
+		Payload.EventTag = TAG_Ability_Interaction_Activate;
+		Payload.Instigator = GetAvatarActorFromActorInfo();
+		Payload.Target = EquippedMessage.Equipment;
 
+		// TODO : Interact OtherInteractable With Equipment
+		
+		//Unequip
+		ASC->TriggerAbilityFromGameplayEvent(UnequipAbilitySpecHandle, &UnequipActorInfo, TAG_Ability_Interaction_Activate, &Payload, *ASC);
+
+		EquippedMessage.State = EAbyssInteractionState::None;
+		EquippedMessage.Equipment = nullptr;
+		
+		return true;
+	}
+
+	return false;
+}
+
+void UAbyssGameplayAbility_Interact::HandleCommonInteractable(const FInteractionOption& Option, FGameplayEventData Payload, FGameplayAbilityActorInfo ActorInfo)
+{
+	FGameplayAbilitySpecHandle* Handle = nullptr;
+	if (auto Task = MyGrantNearbyInteractionTask.Get())
+	{
+		FObjectKey Key(Option.InteractionAbilityToGrant);
+		Handle = Task->InteractionAbilityCache.Find(Key);
+	}
+		
+	//将通过事件标记（TAG_Ability_Interaction_Activate）来触发互动能力。
+	//在这个步骤中，能力系统通过传递事件数据和初始化的演员信息来激活特定的能力，从而响应玩家的交互行为。
+	//如果交互成功，交互目标将执行与其关联的游戏能力。
+	const bool bSuccess = Option.TargetASC->TriggerAbilityFromGameplayEvent(
+		Handle ? *Handle : Option.TargetInteractionAbilitySpecHandle,
+		&ActorInfo,
+		TAG_Ability_Interaction_Activate,
+		&Payload,
+		*Option.TargetASC);
+}
 

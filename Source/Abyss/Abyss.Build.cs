@@ -24,6 +24,7 @@ public class Abyss : ModuleRules
 			"CommonGame",
 			"CommonUser",
 			"CommonUI",
+			"CommonInput",
 			"UMG",
 			"NetCore",
 			"AsyncMixin",

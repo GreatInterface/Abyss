@@ -29,15 +29,11 @@ void UAbyssAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AA
 	{
 		for (const FGameplayAbilitySpec& AbilitySpec : ActivatableAbilities.Items)
 		{
-			UAbyssGameplayAbility* Ability = Cast<UAbyssGameplayAbility>(AbilitySpec.Ability);
-			if (!Ability)
-			{
-				continue;
-			}
+PRAGMA_DISABLE_DEPRECATION_WARNINGS
+			ensureMsgf(AbilitySpec.Ability && AbilitySpec.Ability->GetInstancingPolicy() != EGameplayAbilityInstancingPolicy::NonInstanced, TEXT("InitAbilityActorInfo: All Abilities should be Instanced (NonInstanced is being deprecated due to usability issues)."));
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
 
-			if (Ability->GetInstancingPolicy() != EGameplayAbilityInstancingPolicy::NonInstanced)
-			{
-				for (UGameplayAbility* Instance : AbilitySpec.GetAbilityInstances())
+			for (UGameplayAbility* Instance : AbilitySpec.GetAbilityInstances())
 				{
 					UAbyssGameplayAbility* AbyssAbilityInstance = Cast<UAbyssGameplayAbility>(Instance);
 					if (AbyssAbilityInstance)
@@ -45,11 +41,7 @@ void UAbyssAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AA
 						AbyssAbilityInstance->OnPawnAvatarSet();
 					}
 				}
-			}
-			else
-			{
-				Ability->OnPawnAvatarSet();
-			}
+				
 		}
 
 		//TODO : RegisterASC
@@ -66,6 +58,7 @@ void UAbyssAbilitySystemComponent::InitAbilityActorInfo(AActor* InOwnerActor, AA
 void UAbyssAbilitySystemComponent::TryActivateAbilitiesOnSpawn()
 {
 	ABILITYLIST_SCOPE_LOCK();
+	
 	for (const FGameplayAbilitySpec& Spec : ActivatableAbilities.Items)
 	{
 		if (const UAbyssGameplayAbility* AbyssAbility = Cast<UAbyssGameplayAbility>(Spec.Ability))
@@ -184,22 +177,48 @@ void UAbyssAbilitySystemComponent::ClearAbilityInput()
 	InputHeldSpecHandles.Reset();
 }
 
+bool UAbyssAbilitySystemComponent::IsActivationGroupBlocked(EAbyssAbilityActivationGroup Group) const
+{
+	bool bBlocked = false;
+
+	switch (Group)
+	{
+	case EAbyssAbilityActivationGroup::Independent:
+		bBlocked = false;
+		break;
+		
+	case EAbyssAbilityActivationGroup::Exclusive_Replaceable:
+	case EAbyssAbilityActivationGroup::Exclusive_Blocking:
+		bBlocked = (ActivationGroupCounts[(uint8)EAbyssAbilityActivationGroup::Exclusive_Blocking] > 0);
+		break;
+		
+	default:
+		checkf(false, TEXT("IsActivationGroupBlocked: Invalid ActivationGroup [%d]\n"), (uint8)Group);
+		break;
+	}
+
+	return bBlocked;
+}
+
 void UAbyssAbilitySystemComponent::AbilitySpecInputPressed(FGameplayAbilitySpec& Spec)
 {
 	Super::AbilitySpecInputPressed(Spec);
 
-	//Spec->GetPrimaryInstance();
-	for (UGameplayAbility* Ability : Spec.GetAbilityInstances())
+
+	//UGameplayAbility::bReplicateInputDirectly（直接输入复制）不被支持，因为直接复制输入存在一些同步和预测问题
+	//取而代之的是，建议使用复制的事件（replicated events）来进行输入同步，以确保同步的准确性，
+	//	特别是对于等待输入的任务，如 WaitInputPress
+	if (Spec.IsActive())
 	{
-		//UGameplayAbility::bReplicateInputDirectly（直接输入复制）不被支持，因为直接复制输入存在一些同步和预测问题
-		//取而代之的是，建议使用复制的事件（replicated events）来进行输入同步，以确保同步的准确性，
-		//	特别是对于等待输入的任务，如 WaitInputPress
-		if (Spec.IsActive())
-		{
-			//InvokeReplicatedEvent 方法用于触发 EAbilityGenericReplicatedEvent::InputPressed 事件，这一事件表明用户按下了输入。
-			//这里触发的 InputPressed 事件并不会在这里进行复制，但可以在侦听者监听该事件后，将其复制到服务器端。
-			InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, Spec.Handle, Ability->GetCurrentActivationInfo().GetActivationPredictionKey());
-		}
+
+PRAGMA_DISABLE_DEPRECATION_WARNINGS
+		const UGameplayAbility* PrimaryInstance = Spec.GetPrimaryInstance();
+		FPredictionKey OriginalPredictionKey = PrimaryInstance ? PrimaryInstance->GetCurrentActivationInfo().GetActivationPredictionKey() : Spec.ActivationInfo.GetActivationPredictionKey();
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
+		
+		//InvokeReplicatedEvent 方法用于触发 EAbilityGenericReplicatedEvent::InputPressed 事件，这一事件表明用户按下了输入。
+		//这里触发的 InputPressed 事件并不会在这里进行复制，但可以在侦听者监听该事件后，将其复制到服务器端。
+		InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, Spec.Handle, OriginalPredictionKey);
 	}
 }
 
@@ -207,15 +226,14 @@ void UAbyssAbilitySystemComponent::AbilitySpecInputReleased(FGameplayAbilitySpec
 {
 	Super::AbilitySpecInputReleased(Spec);
 	
-	for (UGameplayAbility* Ability : Spec.GetAbilityInstances())
+	if (Spec.IsActive())
 	{
-		if (Spec.IsActive() && Spec.Ability->IsInstantiated())
-		{
-			//注释请看AbilitySpecInputPressed
-			if (Spec.IsActive())
-			{
-				InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, Spec.Handle, Ability->GetCurrentActivationInfo().GetActivationPredictionKey());
-			}
-		}
+PRAGMA_DISABLE_DEPRECATION_WARNINGS
+		const UGameplayAbility* Instance = Spec.GetPrimaryInstance();
+		FPredictionKey OriginalPredictionKey = Instance ? Instance->GetCurrentActivationInfo().GetActivationPredictionKey() : Spec.ActivationInfo.GetActivationPredictionKey();
+PRAGMA_ENABLE_DEPRECATION_WARNINGS
+
+		// Invoke the InputReleased event. This is not replicated here. If someone is listening, they may replicate the InputReleased event to the server.
+		InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, Spec.Handle, OriginalPredictionKey);
 	}
 }

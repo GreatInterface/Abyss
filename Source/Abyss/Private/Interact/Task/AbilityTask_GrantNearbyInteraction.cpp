@@ -2,7 +2,7 @@
 
 
 #include "Interact/Task/AbilityTask_GrantNearbyInteraction.h"
-
+#include "Engine/OverlapResult.h"
 #include "AbilitySystemComponent.h"
 #include "Abyss/AbyssLogChannels.h"
 #include "Interact/InteractableTarget.h"
@@ -50,7 +50,7 @@ void UAbilityTask_GrantNearbyInteraction::QueryInteractables()
 	{
 		FCollisionQueryParams Params(SCENE_QUERY_STAT(UAbilityTask_GrantNearbyInteraction), false);
 		
-		TArray<FOverlapResult> OverlapResults;
+		TArray<FOverlapResult> OverlapResults{};
 		World->OverlapMultiByChannel(OUT OverlapResults, ActorOwner->GetActorLocation(), FQuat::Identity, Abyss_TraceChannel_Interaction, FCollisionShape::MakeSphere(InteractionScanRange), Params);
 
 		if(OverlapResults.Num() > 0)
@@ -76,7 +76,7 @@ void UAbilityTask_GrantNearbyInteraction::QueryInteractables()
 				if(Entry.InteractionAbilityToGrant)
 				{
 					FObjectKey ObjectKey(Entry.InteractionAbilityToGrant);
-					if(!InteractionAbilityCache.Find(ObjectKey))
+					if (!InteractionAbilityCache.Find(ObjectKey))
 					{
 						FGameplayAbilitySpec Spec(Entry.InteractionAbilityToGrant, 1, INDEX_NONE, this);
 						FGameplayAbilitySpecHandle Handle = AbilitySystemComponent->GiveAbility(Spec);

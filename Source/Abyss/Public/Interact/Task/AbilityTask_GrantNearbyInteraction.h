@@ -11,6 +11,8 @@ UCLASS()
 class UAbilityTask_GrantNearbyInteraction final : public UAbilityTask
 {
 	GENERATED_BODY()
+
+	friend class UAbyssGameplayAbility_Interact;
 public:
 
 	UAbilityTask_GrantNearbyInteraction(const FObjectInitializer& ObjectInitializer);

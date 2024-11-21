@@ -8,6 +8,14 @@
 
 UE_DECLARE_GAMEPLAY_TAG_EXTERN(TAG_INTENACTION_DURATION_MESSAGE)
 
+UENUM(BlueprintType)
+enum class EAbyssInteractionState : uint8
+{
+	None,
+
+	Equip
+};
+
 USTRUCT(BlueprintType)
 struct FAbyssInteractDurationMessage
 {
@@ -33,4 +41,19 @@ public:
 	
 	UPROPERTY(BlueprintReadWrite)
 	TArray<TScriptInterface<IInteractableTarget>> Targets;
+};
+
+USTRUCT(BlueprintType)
+struct FAbyssEquippedMessage
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite)
+	TObjectPtr<AActor> Equipment = nullptr;
+
+	UPROPERTY(BlueprintReadWrite)
+	EAbyssInteractionState State = EAbyssInteractionState::None;
+
+	UPROPERTY(BlueprintReadWrite)
+	bool bSuccessEquipped = false;
 };

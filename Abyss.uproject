@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "{0373AF72-4574-8644-B739-A49609B9DB77}",
+	"EngineAssociation": "{868CAA96-4D2E-77BE-60DE-A7A9F32F40A1}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -81,6 +81,22 @@
 		},
 		{
 			"Name": "ControlFlows",
+			"Enabled": true
+		},
+		{
+			"Name": "CommonUI",
+			"Enabled": true
+		},
+		{
+			"Name": "AngelscriptGAS",
+			"Enabled": true
+		},
+		{
+			"Name": "AngelscriptEnhancedInput",
+			"Enabled": true
+		},
+		{
+			"Name": "AngelscriptStructUtils",
 			"Enabled": true
 		}
 	]

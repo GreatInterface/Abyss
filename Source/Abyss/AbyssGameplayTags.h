@@ -4,6 +4,8 @@
 
 namespace AbyssGameplayTags
 {
+	ABYSS_API	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Ability_ActivateFail_ActivationGroup);
+	
 	ABYSS_API	UE_DECLARE_GAMEPLAY_TAG_EXTERN(InitState_Spawned);
 	ABYSS_API	UE_DECLARE_GAMEPLAY_TAG_EXTERN(InitState_DataAvailable);
 	ABYSS_API	UE_DECLARE_GAMEPLAY_TAG_EXTERN(InitState_DataInitialized);
@@ -14,4 +16,5 @@ namespace AbyssGameplayTags
 	ABYSS_API	UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Look_Stick);
 	ABYSS_API	UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_Crouch);
 	ABYSS_API	UE_DECLARE_GAMEPLAY_TAG_EXTERN(InputTag_AutoRun);
+	
 }

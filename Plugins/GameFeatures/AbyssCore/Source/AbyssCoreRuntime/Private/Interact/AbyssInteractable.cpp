@@ -2,7 +2,6 @@
 
 
 #include "Interact/AbyssInteractable.h"
-#include "GameplayMessageSubsystem.h"
 #include "Interact/Message/AbyssInteractMessageType.h"
 
 
